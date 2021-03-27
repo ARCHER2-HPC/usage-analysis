@@ -1,3 +1,4 @@
+#!/bin/env python
 # scua.py (Slurm Code Usage Analysis)
 #
 # Python program to take output from sacct and analyse code usage
