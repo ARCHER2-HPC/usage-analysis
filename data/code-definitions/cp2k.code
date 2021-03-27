@@ -1,0 +1,59 @@
+#----------------------------------------------------------------------
+# Copyright 2014 EPCC, The University of Edinburgh
+#
+# This file is part of archer-monitor.
+#
+# archer-monitor is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# archer-monitor is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with archer-monitor.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
+#
+# CP2K Code
+# =========
+#
+# This configuration file describes the CP2K code
+#
+# This file has been annotated with comments describing each
+# option to aid in installing the tool on other systems.
+#
+# All options must be provided in the configuration file even
+# if the value is not specified.
+#
+#----------------------------------------------------------------------
+
+# Basic code information
+[code info]
+
+# The name of the code (used in output)
+name: cp2k
+
+# Regular expression used to identify executables in apstat output
+regexp: cp2k
+
+#----------------------------------------------------------------------
+# Metadata associated with the code
+[metadata]
+
+# Programming language and version
+primary language: Fortran
+version:          95
+
+# Licensing 
+academic license: Open Source
+commercial license: Open Source
+
+# Rough code category
+code type: Periodic Electronic Structure
+
+# Major research area on ARCHER
+research area: Materials Science
+parallel-model: MPI+OpenMP
