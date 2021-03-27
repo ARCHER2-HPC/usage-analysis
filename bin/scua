@@ -1,6 +1,9 @@
 #!/bin/bash
 
 # Slurm Code Usage Analysis (scua)
+#
+# Usage:
+#    scua [options]
 # 
 # Analyse code usage from Slurm. Relies on the scua.py 
 # program to do the analysis. This wrapper script runs the
@@ -8,3 +11,71 @@
 # passes it to scua.py. If you already have the data, you
 # should use the scua.py program directly.
 #
+# Copyright A Turner, EPCC, The University of Edinburgh 2021
+#
+# This file is part of scua.
+#
+#     scua is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     scua is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with scua.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+# Paths to Python utilities
+SCUA_PYTHON=""
+SACCT_BASE_OPTS="-a --format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter ',' | egrep '[0-9]\.[0-9]' | grep COMPLETED"
+SACCT_OUTPUT_FILE="scua_sacct.txt"
+
+# Get command line options
+startdate=""
+enddate=""
+extra_opts=""
+while getopts ":A:E:hS:u:" opt; do
+  case ${opt} in
+    A )
+      extra_opts="${extra_opts} -A ${OPTARG}"
+      ;;
+    E )
+      enddate="-E ${OPTARG}"
+      ;;
+    h )
+      echo "Usage: scua [options]"
+      echo "Options:"
+      echo " -A account      Limit to specified account code, e.g. z01"
+      echo " -E date/time    End date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
+      echo " -h              Show this help"
+      echo " -S date/time    Start date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
+      echo " -u user         Limit to specific user"
+      exit 0
+      ;;
+    S )
+      startdate="-S ${OPTARG}"
+      ;;
+    u )
+      extra_opts="${extra_opts} -u ${OPTARG}"
+      ;;
+    \? )
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+     : )
+      echo "Invalid Option: -$OPTARG requires an argument" 1>&2
+      exit 1
+      ;;
+  esac
+done
+shift $((OPTIND -1))
+
+# Get output from sacct
+sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS}" > scua_sacct.txt
+
+exit 0
+
