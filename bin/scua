@@ -75,7 +75,7 @@ done
 shift $((OPTIND -1))
 
 # Get output from sacct
-sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS}" > scua_sacct.txt
+sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} > scua_sacct.txt
 
 exit 0
 
