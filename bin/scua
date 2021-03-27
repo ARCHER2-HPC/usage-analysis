@@ -31,7 +31,7 @@
 
 # Paths to Python utilities
 SCUA_PYTHON=""
-SACCT_BASE_OPTS="-a --format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter ',' | egrep '[0-9]\.[0-9]' | grep COMPLETED"
+SACCT_BASE_OPTS="-a --format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter ','"
 SACCT_OUTPUT_FILE="scua_sacct.txt"
 
 # Get command line options
@@ -75,7 +75,7 @@ done
 shift $((OPTIND -1))
 
 # Get output from sacct
-sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} > scua_sacct.txt
+sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '[0-9]\.[0-9]' | grep COMPLETED > scua_sacct.txt
 
 exit 0
 
