@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr//bin/env python
 # scua.py (Slurm Code Usage Analysis)
 #
 # Python program to take output from sacct and analyse code usage
@@ -6,7 +6,6 @@
 
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
 import sys
 import os
 import re
@@ -16,7 +15,7 @@ from code_def import CodeDef
 #=======================================================
 # Read any code definitions
 #=======================================================
-codeConfigDir = 'descriptions'
+codeConfigDir = '/home/z19/z19/aturner/software/usage-analysis/data/code-definitions'
 codes = []
 nCode = 0
 # Create a dictionary of codes
