@@ -89,6 +89,6 @@ else
    echo "No jobs found"
 fi
 
-# rm scua_sacct.txt
+rm scua_sacct.txt
 exit 0
 
