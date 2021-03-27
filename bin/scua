@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Slurm Code Usage Analysis (scua)
+# 
+# Analyse code usage from Slurm. Relies on the scua.py 
+# program to do the analysis. This wrapper script runs the
+# correct sacct command to extract the data from Slurm and
+# passes it to scua.py. If you already have the data, you
+# should use the scua.py program directly.
+#
