@@ -145,11 +145,11 @@ q3use = float(df.NTasks[cumsum >= cutoff].iloc[0])
 usage_stats.append(['Overall', minjob, q1use, meduse, q3use, maxjob,  totjobs,totcu])
 
 # Print out title
-print("\n---------------------------------")
-print("# SCUA (Slurm Code Usage Analysis")
+print("\n----------------------------------")
+print("# SCUA (Slurm Code Usage Analysis)")
 print()
 print("EPCC, 2021")
-print("---------------------------------\n")
+print("----------------------------------\n")
 
 # Print out final stats tables
 print('\n## Job size by code: weighted by usage\n')
