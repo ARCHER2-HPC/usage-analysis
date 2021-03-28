@@ -44,6 +44,33 @@ import fnmatch
 from code_def import CodeDef
 
 #=======================================================
+# Functions to compute statistics
+#=======================================================
+# Get statistics based on numbers of jobs
+def getjobstats(df, cu):
+    totcu = df['Nodeh'].sum()
+    percentcu = 100 * totcu / cu
+    totjobs = df['Count'].sum()
+    minjob = df['NTasks'].min()
+    maxjob = df['NTasks'].max()
+    q1job = df['NTasks'].quantile(0.25)
+    medjob = df['NTasks'].quantile(0.5)
+    q3job = df['NTasks'].quantile(0.75)
+    return totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job
+
+# Get statistics weighted by CU (nodeh)
+def getweightedstats(df):
+    df.sort_values('NTasks', inplace=True)
+    cumsum = df.Nodeh.cumsum()
+    cutoff = df.Nodeh.sum() * 0.5
+    meduse = float(df.NTasks[cumsum >= cutoff].iloc[0])
+    cutoff = df.Nodeh.sum() * 0.25
+    q1use = float(df.NTasks[cumsum >= cutoff].iloc[0])
+    cutoff = df.Nodeh.sum() * 0.75
+    q3use = float(df.NTasks[cumsum >= cutoff].iloc[0])
+    return meduse, q1use, q3use
+
+#=======================================================
 # Read any code definitions
 #=======================================================
 codeConfigDir = os.getenv('SCUA_BASE') + '/data/code-definitions'
@@ -74,6 +101,7 @@ for code in codes:
     df.loc[df.ExeName.str.contains(codere), "Code"] = code.name
 
 # Loop over codes getting the statistics
+allcu = df['Nodeh'].sum()
 job_stats = []
 usage_stats = []
 for code in codes:
@@ -81,68 +109,29 @@ for code in codes:
     df_code = df[mask]
     if not df_code.empty:
         # Job number stats
-        totcu = df_code['Nodeh'].sum()
-        totjobs = df_code['Count'].sum()
-        minjob = df_code['NTasks'].min()
-        maxjob = df_code['NTasks'].max()
-        q1job = df_code['NTasks'].quantile(0.25)
-        medjob = df_code['NTasks'].quantile(0.5)
-        q3job = df_code['NTasks'].quantile(0.75)
-        job_stats.append([code.name, minjob, q1job, medjob, q3job,maxjob,totjobs,totcu])
+        totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_code, allcu)
+        job_stats.append([code.name, minjob, q1job, medjob, q3job,maxjob,totjobs,totcu, percentcu])
         # Usage stats
-        df_code.sort_values('NTasks', inplace=True)
-        cumsum = df_code.Nodeh.cumsum()
-        cutoff = df_code.Nodeh.sum() * 0.5
-        meduse = float(df_code.NTasks[cumsum >= cutoff].iloc[0])
-        cutoff = df_code.Nodeh.sum() * 0.25
-        q1use = float(df_code.NTasks[cumsum >= cutoff].iloc[0])
-        cutoff = df_code.Nodeh.sum() * 0.75
-        q3use = float(df_code.NTasks[cumsum >= cutoff].iloc[0])
-        usage_stats.append([code.name, minjob, q1use, meduse, q3use, maxjob, totjobs, totcu])
+        meduse, q1use, q3use = getweightedstats(df_code)
+        usage_stats.append([code.name, minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu])
 
 # Get the data from unidentified executables
 mask = df['Code'].values == None
 df_code = df[mask]
 if not df_code.empty:
     # Job number stats
-    totcu = df_code['Nodeh'].sum()
-    totjobs = df_code['Count'].sum()
-    minjob = df_code['NTasks'].min()
-    maxjob = df_code['NTasks'].max()
-    q1job = df_code['NTasks'].quantile(0.25)
-    medjob = df_code['NTasks'].quantile(0.5)
-    q3job = df_code['NTasks'].quantile(0.75)
-    job_stats.append(['Unidentified', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu])
+    totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_code, allcu)
+    job_stats.append(['Unidentified', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu, percentcu])
     # Usage stats
-    df_code.sort_values('Nodes', inplace=True)
-    cumsum = df_code.Nodeh.cumsum()
-    cutoff = df_code.Nodeh.sum() * 0.5
-    meduse = float(df_code.NTasks[cumsum >= cutoff].iloc[0])
-    cutoff = df_code.Nodeh.sum() * 0.25
-    q1use = float(df_code.NTasks[cumsum >= cutoff].iloc[0])
-    cutoff = df_code.Nodeh.sum() * 0.75
-    q3use = float(df_code.NTasks[cumsum >= cutoff].iloc[0])
-    usage_stats.append(['Unidentified', minjob, q1use, meduse, q3use, maxjob, totjobs, totcu])
+    meduse, q1use, q3use = getweightedstats(df_code)
+    usage_stats.append(['Unidentified', minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu])
 # Get overall data
 # Job size statistics from job numbers
-totcu = df['Nodeh'].sum()
-totjobs = df['Count'].sum()
-minjob = df['NTasks'].min()
-maxjob = df['NTasks'].max()
-q1job = df['NTasks'].quantile(0.25)
-medjob = df['NTasks'].quantile(0.5)
-q3job = df['NTasks'].quantile(0.75)
-job_stats.append(['Overall', minjob, q1job, medjob, q3job,maxjob, totjobs,totcu])
+totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df, allcu)
+job_stats.append(['Overall', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu, percentcu])
 # Job size statistics weighted by usage
-df.sort_values('Nodes', inplace=True)
-cumsum = df.Nodeh.cumsum()
-cutoff = df.Nodeh.sum() * 0.5
-meduse = float(df.NTasks[cumsum >= cutoff].iloc[0])
-cutoff = df.Nodeh.sum() * 0.25
-q1use = float(df.NTasks[cumsum >= cutoff].iloc[0])
-cutoff = df.Nodeh.sum() * 0.75
-q3use = float(df.NTasks[cumsum >= cutoff].iloc[0])
-usage_stats.append(['Overall', minjob, q1use, meduse, q3use, maxjob,  totjobs,totcu])
+meduse, q1use, q3use = getweightedstats(df)
+usage_stats.append(['Overall', minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu])
 
 # Print out title
 print("\n----------------------------------")
@@ -152,12 +141,12 @@ print("EPCC, 2021")
 print("----------------------------------\n")
 
 # Print out final stats tables
-print('\n## Job size by code: weighted by usage\n')
-df_usage = pd.DataFrame(usage_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU'])
+print('\n## Job size (in cores) by code: weighted by usage\n')
+df_usage = pd.DataFrame(usage_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU', 'PercentCU'])
 df_usage.sort_values('TotCU', inplace=True, ascending=False)
 print(df_usage.to_markdown(index=False, floatfmt=".1f"))
-print('\n## Job size by code: based on job numbers\n')
-df_job = pd.DataFrame(job_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU'])
+print('\n## Job size (in cores) by code: based on job numbers\n')
+df_job = pd.DataFrame(job_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU', 'PercentCU'])
 df_job.sort_values('TotCU', inplace=True, ascending=False)
 print(df_job.to_markdown(index=False, floatfmt=".1f"))
 print()
