@@ -87,10 +87,10 @@ then
    extra_opts="-a"
 fi
 sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '[0-9]\.[0-9]' | grep COMPLETED > ${SACCT_OUTPUT_FILE}
-if [ -s scua_sacct.txt ]
+if [ -s ${SACCT_OUTPUT_FILE} ]
 then
    # We have some data, lets process it
-   ${SCUA_PYTHON} scua_sacct.txt 2> /dev/null
+   ${SCUA_PYTHON} ${SACCT_OUTPUT_FILE} 2> /dev/null
 else
    # No data, just stop
    echo "No jobs found"
