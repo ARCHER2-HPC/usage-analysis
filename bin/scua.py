@@ -3,6 +3,37 @@
 #
 # Python program to take output from sacct and analyse code usage
 #
+# Usage:
+#   scua.py <sacct data file>
+#
+# The data file is the output for Slurm sacct, produced in using a 
+# command such as:
+#   sacct --format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter , \
+#        | egrep '[0-9]\.[0-9]' | grep COMPLETED
+#
+# The egrep extracts all subjobs and then grep captures the completed jobs.
+# This was done as the -s CD option to sacct was not found to work correctly.
+#
+#----------------------------------------------------------------------
+# Copyright 2021 EPCC, The University of Edinburgh
+#
+# This file is part of usage-analysis.
+#
+# usage-analysis is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# usage-analysis is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with usage-analysis.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
+#
+#
 
 import numpy as np
 import pandas as pd

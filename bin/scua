@@ -11,22 +11,24 @@
 # passes it to scua.py. If you already have the data, you
 # should use the scua.py program directly.
 #
-# Copyright A Turner, EPCC, The University of Edinburgh 2021
+#----------------------------------------------------------------------
+# Copyright 2021 EPCC, The University of Edinburgh
 #
-# This file is part of scua.
+# This file is part of usage-analysis.
 #
-#     scua is free software: you can redistribute it and/or modify
-#     it under the terms of the GNU General Public License as published by
-#     the Free Software Foundation, either version 3 of the License, or
-#     (at your option) any later version.
+# usage-analysis is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-#     scua is distributed in the hope that it will be useful,
-#     but WITHOUT ANY WARRANTY; without even the implied warranty of
-#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#     GNU General Public License for more details.
+# usage-analysis is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-#     You should have received a copy of the GNU General Public License
-#     along with scua.  If not, see <https://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License
+# along with usage-analysis.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
 #
 
 # Paths to Python utilities
@@ -52,6 +54,7 @@ while getopts ":A:E:hkS:u:" opt; do
       echo "Options:"
       echo " -A account      Limit to specified account code, e.g. z01"
       echo " -E date/time    End date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
+      echo " -k              Keeps the intermediate output from sacct in: ${SACCT_OUTPUT_FILE}"
       echo " -h              Show this help"
       echo " -S date/time    Start date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
       echo " -u user         Limit to specific user"
