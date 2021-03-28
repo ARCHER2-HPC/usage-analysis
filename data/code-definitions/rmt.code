@@ -19,17 +19,17 @@
 #
 
 [code info]
-name: CHROMA
-regexp: chroma
+name: RMT
+regexp: rmt.x
 
 [metadata]
-primary language: C++
-version: 
+primary language: Fortran
+version:          95
 
-academic license: Academic Free
-commercial license: Unknown
+academic license: GPLv3
+commercial license: GPLv3
 
-code type: Lattice QCD
+code type: R-Matrix
 
-research area: Particle Physics
-parallel-model: MPI
+research area: Atomic Physics
+parallel-model: MPI+OpenMP

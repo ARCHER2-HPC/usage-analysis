@@ -1,7 +1,7 @@
 #----------------------------------------------------------------------
 # Copyright 2021 EPCC, The University of Edinburgh
 #
-# This file is part of usage-analysis.
+# This file is part of usage-analysis
 #
 # usage-analysis is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,17 +19,17 @@
 #
 
 [code info]
-name: CHROMA
-regexp: chroma
+name: SDPB
+regexp: sdpb|pvm2sdp
 
 [metadata]
 primary language: C++
-version: 
+version:          14
 
-academic license: Academic Free
-commercial license: Unknown
+academic license: MIT
+commercial license: MIT
 
-code type: Lattice QCD
+code type: Mathematics
 
-research area: Particle Physics
+research area: Mathematics
 parallel-model: MPI
