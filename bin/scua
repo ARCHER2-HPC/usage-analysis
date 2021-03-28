@@ -32,7 +32,7 @@
 # Paths to Python utilities
 SCUA_PYTHON="scua.py"
 SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter ,"
-SACCT_OUTPUT_FILE="scua_sacct.txt"
+SACCT_OUTPUT_FILE="scua_sacct.csv"
 
 # Get command line options
 startdate=""
@@ -83,7 +83,7 @@ if [ -z "$extra_opts" ]
 then
    extra_opts="-a"
 fi
-sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '[0-9]\.[0-9]' | grep COMPLETED > scua_sacct.txt
+sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '[0-9]\.[0-9]' | grep COMPLETED > ${SACCT_OUTPUT_FILE}
 if [ -s scua_sacct.txt ]
 then
    # We have some data, lets process it
@@ -95,7 +95,7 @@ fi
 
 if [ -z "$keep_file" ] 
 then
-   rm scua_sacct.txt
+   rm ${SACCT_OUTPUT_FILE}
 fi
 exit 0
 
