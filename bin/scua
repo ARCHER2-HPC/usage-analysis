@@ -38,7 +38,8 @@ SACCT_OUTPUT_FILE="scua_sacct.txt"
 startdate=""
 enddate=""
 extra_opts=""
-while getopts ":A:E:hS:u:" opt; do
+keep_file=""
+while getopts ":A:E:hkS:u:" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} -A ${OPTARG}"
@@ -55,6 +56,9 @@ while getopts ":A:E:hS:u:" opt; do
       echo " -S date/time    Start date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
       echo " -u user         Limit to specific user"
       exit 0
+      ;;
+    k )
+      keep_file=1
       ;;
     S )
       startdate="-S ${OPTARG}"
@@ -89,6 +93,9 @@ else
    echo "No jobs found"
 fi
 
-rm scua_sacct.txt
+if [ -z "$keep_file" ] 
+then
+   rm scua_sacct.txt
+fi
 exit 0
 
