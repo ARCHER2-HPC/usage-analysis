@@ -1,9 +1,3 @@
-----------------------------------
-# SCUA (Slurm Code Usage Analysis)
-
-EPCC, 2021
-----------------------------------
-
 
 ## Job size by code: weighted by usage
 

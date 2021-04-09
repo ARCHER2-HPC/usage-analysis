@@ -73,7 +73,7 @@ def getweightedstats(df):
 #=======================================================
 # Read any code definitions
 #=======================================================
-codeConfigDir = os.getenv('SCUA_BASE') + '/data/code-definitions'
+codeConfigDir = os.getenv('SCUA_BASE') + '/app-data/code-definitions'
 codes = []
 nCode = 0
 # Create a dictionary of codes
