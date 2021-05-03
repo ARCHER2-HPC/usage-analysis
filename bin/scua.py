@@ -108,7 +108,7 @@ for code in codes:
     mask = df['Code'].values == code.name
     df_code = df[mask]
     if not df_code.empty:
-        # Job number stats
+        # Job number stats
         totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_code, allcu)
         job_stats.append([code.name, minjob, q1job, medjob, q3job,maxjob,totjobs,totcu, percentcu])
         # Usage stats
@@ -119,14 +119,14 @@ for code in codes:
 mask = df['Code'].values == None
 df_code = df[mask]
 if not df_code.empty:
-    # Job number stats
+    # Job number stats
     totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_code, allcu)
     job_stats.append(['Unidentified', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu, percentcu])
     # Usage stats
     meduse, q1use, q3use = getweightedstats(df_code)
     usage_stats.append(['Unidentified', minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu])
 # Get overall data
-# Job size statistics from job numbers
+# Job size statistics from job numbers
 totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df, allcu)
 job_stats.append(['Overall', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu, percentcu])
 # Job size statistics weighted by usage
