@@ -33,7 +33,7 @@
 
 # Paths to Python utilities
 SCUA_PYTHON="scua.py"
-SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter '::'"
+SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter ::"
 SACCT_OUTPUT_FILE="scua_sacct.csv"
 
 # Get command line options
