@@ -117,7 +117,7 @@ for file in os.listdir(codeConfigDir):
 
 # Read dataset (usually saved from Slurm)
 colid = ['JobID','ExeName','Account','Nodes','NTasks','Runtime','State']
-df = pd.read_csv(args.filename[0], names=colid, sep='::')
+df = pd.read_csv(args.filename[0], names=colid, sep='::', engine='python')
 # Count helps with number of jobs
 df['Count'] = 1
 df['Nodeh'] = df['Nodes'] * df['Runtime'] / 3600.0
