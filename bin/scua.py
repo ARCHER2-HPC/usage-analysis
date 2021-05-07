@@ -192,7 +192,7 @@ usage_stats.append(['Overall', minjob, q1use, meduse, q3use, maxjob, totjobs, to
 # Write anonymised version of data if required
 if args.outputanon:
     df['Account'] = 'anon'
-    df.to_csv(f'{args.prefix}_sacct.csv', index=False)
+    df.to_csv(f'{args.prefix}_sacct.csv', index=False, na_rep="None")
 
 # Output data
 print("\n----------------------------------")
