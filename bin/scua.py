@@ -10,6 +10,7 @@
 #
 # optional arguments:
 #   -h, --help       show this help message and exit
+#   --anon           output anonymised CSV raw job data
 #   --plots          Produce data plots
 #   --prefix=PREFIX  Set the prefix to be used for output files
 #
@@ -97,6 +98,7 @@ def reindex_df(df, weight_col):
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='Compute software usage data from Slurm output.')
 parser.add_argument('filename', type=str, nargs=1, help='Data file containing listing of Slurm jobs')
+parser.add_argument('--anon', dest='outputanon', action='store_true', default=False, help='Output anonymised CSV raw job data')
 parser.add_argument('--plots', dest='makeplots', action='store_true', default=False, help='Produce data plots')
 parser.add_argument('--prefix', dest='prefix', type=str, action='store', default='scua', help='Set the prefix to be used for output files')
 args = parser.parse_args()
@@ -130,6 +132,10 @@ df["Code"] = None
 for code in codes:
     codere = re.compile(code.regexp)
     df.loc[df.ExeName.str.contains(codere), "Code"] = code.name
+
+# Write anonymised version of data if required
+if args.writeanon:
+    df.to_csv(f'{args.prefix}_sacct.csv', index=False)
 
 if args.makeplots:
     plt.figure(figsize=[6,2])
