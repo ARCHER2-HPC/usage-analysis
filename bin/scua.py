@@ -133,9 +133,6 @@ for code in codes:
     codere = re.compile(code.regexp)
     df.loc[df.ExeName.str.contains(codere), "Code"] = code.name
 
-# Write anonymised version of data if required
-if args.outputanon:
-    df.to_csv(f'{args.prefix}_sacct.csv', index=False)
 
 if args.makeplots:
     plt.figure(figsize=[6,2])
@@ -191,6 +188,11 @@ job_stats.append(['Overall', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu
 # Job size statistics weighted by usage
 meduse, q1use, q3use = getweightedstats(df)
 usage_stats.append(['Overall', minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu])
+
+# Write anonymised version of data if required
+if args.outputanon:
+    df['Account'] = 'anon'
+    df.to_csv(f'{args.prefix}_sacct.csv', index=False)
 
 # Output data
 print("\n----------------------------------")
