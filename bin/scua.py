@@ -134,7 +134,7 @@ for code in codes:
     df.loc[df.ExeName.str.contains(codere), "Code"] = code.name
 
 # Write anonymised version of data if required
-if args.writeanon:
+if args.outputanon:
     df.to_csv(f'{args.prefix}_sacct.csv', index=False)
 
 if args.makeplots:
