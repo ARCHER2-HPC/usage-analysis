@@ -96,7 +96,7 @@ if [ -z "$extra_opts" ]
 then
    extra_opts="-a"
 fi
-sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '[0-9]\.[0-9]' | grep COMPLETED > ${SACCT_OUTPUT_FILE}
+sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '^[0-9]+\.[0-9]' | grep COMPLETED > ${SACCT_OUTPUT_FILE}
 if [ -s ${SACCT_OUTPUT_FILE} ]
 then
    # We have some data, lets process it using the Python program
