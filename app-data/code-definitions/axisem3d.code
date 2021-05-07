@@ -1,0 +1,35 @@
+#----------------------------------------------------------------------
+# Copyright 2021 EPCC, The University of Edinburgh
+#
+# This file is part of usage-analysis.
+#
+# usage-analysis is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# usage-analysis is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with usage-analysis.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
+#
+
+[code info]
+name: AxiSEM3D
+regexp: axisem3d
+
+[metadata]
+primary language: C++
+version:          14
+
+academic license: Open Source (MIT)
+commercial license: Open Source (MIT)
+
+code type: Spectral Element
+
+research area: Seismology
+parallel-model: MPI
