@@ -9,7 +9,7 @@
 # program to do the analysis. This wrapper script runs the
 # correct sacct command to extract the data from Slurm and
 # passes it to scua.py. If you already have the data, you
-# should use the scua.py program directly.
+# can use the scua.py program directly.
 #
 #----------------------------------------------------------------------
 # Copyright 2021 EPCC, The University of Edinburgh
@@ -33,8 +33,9 @@
 
 # Paths to Python utilities
 SCUA_PYTHON="scua.py"
+# Use :: as the delimiter to avoid issues with commas in job names
 SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter ::"
-SACCT_OUTPUT_FILE="scua_sacct.csv"
+SACCT_OUTPUT_FILE="scua_sacct.dat"
 
 # Get command line options
 startdate=""
@@ -98,7 +99,7 @@ fi
 sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '[0-9]\.[0-9]' | grep COMPLETED > ${SACCT_OUTPUT_FILE}
 if [ -s ${SACCT_OUTPUT_FILE} ]
 then
-   # We have some data, lets process it
+   # We have some data, lets process it using the Python program
    echo "Running: ${SCUA_PYTHON} ${python_opts} ${SACCT_OUTPUT_FILE}"
    ${SCUA_PYTHON} ${python_opts} ${SACCT_OUTPUT_FILE}
 else

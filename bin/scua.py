@@ -1,7 +1,7 @@
 #!/usr//bin/env python
 # scua.py (Slurm Code Usage Analysis)
 #
-# usage: scua.py [-h] [--plots] [--prefix PREFIX] filename
+# usage: scua.py [-h] [--plots] [--prefix=PREFIX] filename
 #
 # Compute software usage data from Slurm output.
 # 
@@ -11,11 +11,11 @@
 # optional arguments:
 #   -h, --help       show this help message and exit
 #   --plots          Produce data plots
-#   --prefix PREFIX  Set the prefix to be used for output files
+#   --prefix=PREFIX  Set the prefix to be used for output files
 #
 # The data file is the output for Slurm sacct, produced in using a 
 # command such as:
-#   sacct --format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter , \
+#   sacct --format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter :: \
 #        | egrep '[0-9]\.[0-9]' | grep COMPLETED
 #
 # The egrep extracts all subjobs and then grep captures the completed jobs.
