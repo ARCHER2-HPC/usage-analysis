@@ -17,10 +17,9 @@
 # The data file is the output for Slurm sacct, produced in using a 
 # command such as:
 #   sacct --format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter :: \
-#        | egrep '[0-9]\.[0-9]' | grep COMPLETED
+#        | egrep '[0-9]\.[0-9]' | egrep -v "RUNNING|PENDING|REQUEUED"
 #
-# The egrep extracts all subjobs and then grep captures the completed jobs.
-# This was done as the -s CD option to sacct was not found to work correctly.
+# The egrep extracts all subjobs and then excludes specific job states
 #
 #----------------------------------------------------------------------
 # Copyright 2021 EPCC, The University of Edinburgh
