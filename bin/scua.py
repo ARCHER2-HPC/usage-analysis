@@ -63,23 +63,23 @@ def getjobstats(df, cu):
     totcu = df['Nodeh'].sum()
     percentcu = 100 * totcu / cu
     totjobs = df['Count'].sum()
-    minjob = df['NTasks'].min()
-    maxjob = df['NTasks'].max()
-    q1job = df['NTasks'].quantile(0.25)
-    medjob = df['NTasks'].quantile(0.5)
-    q3job = df['NTasks'].quantile(0.75)
+    minjob = df['Cores'].min()
+    maxjob = df['Cores'].max()
+    q1job = df['Cores'].quantile(0.25)
+    medjob = df['Cores'].quantile(0.5)
+    q3job = df['Cores'].quantile(0.75)
     return totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job
 
 # Get statistics weighted by CU (nodeh)
 def getweightedstats(df):
-    df.sort_values('NTasks', inplace=True)
+    df.sort_values('Cores', inplace=True)
     cumsum = df.Nodeh.cumsum()
     cutoff = df.Nodeh.sum() * 0.5
-    meduse = float(df.NTasks[cumsum >= cutoff].iloc[0])
+    meduse = float(df.Cores[cumsum >= cutoff].iloc[0])
     cutoff = df.Nodeh.sum() * 0.25
-    q1use = float(df.NTasks[cumsum >= cutoff].iloc[0])
+    q1use = float(df.Cores[cumsum >= cutoff].iloc[0])
     cutoff = df.Nodeh.sum() * 0.75
-    q3use = float(df.NTasks[cumsum >= cutoff].iloc[0])
+    q3use = float(df.Cores[cumsum >= cutoff].iloc[0])
     return meduse, q1use, q3use
 
 # Compute version of dataframe weighted by use
@@ -93,6 +93,9 @@ def reindex_df(df, weight_col):
 #=======================================================
 # Main code
 #=======================================================
+
+# Constants
+CPN = 128
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='Compute software usage data from Slurm output.')
@@ -122,6 +125,13 @@ df = pd.read_csv(args.filename[0], names=colid, sep='::', engine='python')
 # Count helps with number of jobs
 df['Count'] = 1
 df['Nodeh'] = df['Nodes'] * df['Runtime'] / 3600.0
+# This section is to get the number of used cores, we need to make sure we catch
+# jobs where people are using SMT and do not count the size of these wrong
+df['cpn'] = df['NTasks'] / df['Nodes']
+# Default is that NTasks actually corresponds to cores
+df['Cores'] = df['NTasks']
+# Catch those cases where jobs are using SMT and recompute core count
+df.loc[df['cpn'] > CPN, 'Cores'] = df['Nodes'] * CPN
 # Split JobID column into JobID and subjob ID
 df['JobID'] = df['JobID'].astype(str)
 df[['JobID','SubJobID']] = df['JobID'].str.split('.', 1, expand=True)
@@ -136,7 +146,7 @@ for code in codes:
 if args.makeplots:
     plt.figure(figsize=[6,2])
     sns.boxplot(
-        x="NTasks",
+        x="Cores",
         orient='h',
         color='lightseagreen',
         showmeans=True,
@@ -224,7 +234,7 @@ if args.makeplots:
     plt.figure(figsize=[8,6])
     sns.boxplot(
         y="Code",
-        x="NTasks",
+        x="Cores",
         orient='h',
         color='lightseagreen',
         order=topcodes,
