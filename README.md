@@ -44,7 +44,3 @@ image files:
   weighted by CU usage per job
 - `${prefix}_top15_boxplot.png`: Boxplot representing job size statistics for the top 15
   codes by usage weighted by CU usage per job
-
-The repository also contains output from SCUA on a monthly basis for ARCHER2, see:
-
-- [Historical code use data from ARCHER2](historical-data/archer2-code-use)
