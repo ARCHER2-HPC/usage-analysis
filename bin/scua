@@ -47,7 +47,7 @@ python_opts=""
 while getopts ":A:E:ghkp:S:u:" opt; do
   case ${opt} in
     A )
-      extra_opts="${extra_opts} -A ${OPTARG}"
+      extra_opts="${extra_opts} --group=${OPTARG}"
       ;;
     E )
       enddate="-E ${OPTARG}"
@@ -92,11 +92,7 @@ while getopts ":A:E:ghkp:S:u:" opt; do
 done
 shift $((OPTIND -1))
 
-# Get output from sacct
-if [ -z "$extra_opts" ] 
-then
-   extra_opts="-a"
-fi
+extra_opts="${extra_opts} -a"
 sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '^[0-9]+\.[0-9]' | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_OUTPUT_FILE}
 if [ -s ${SACCT_OUTPUT_FILE} ]
 then
