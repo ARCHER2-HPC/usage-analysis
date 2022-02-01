@@ -128,7 +128,7 @@ colid = ['JobID','ExeName','Account','Nodes','NTasks','Runtime','State']
 df = pd.read_csv(args.filename[0], names=colid, sep='::', engine='python')
 # Count helps with number of jobs
 df['Count'] = 1
-df['Nodeh'] = df['Nodes'] * df['Runtime'] / 3600.0
+
 # This section is to get the number of used cores, we need to make sure we catch
 # jobs where people are using SMT and do not count the size of these wrong
 df['cpn'] = df['NTasks'] / df['Nodes']
@@ -136,6 +136,13 @@ df['cpn'] = df['NTasks'] / df['Nodes']
 df['Cores'] = df['NTasks']
 # Catch those cases where jobs are using SMT and recompute core count
 df.loc[df['cpn'] > CPN, 'Cores'] = df['Nodes'] * CPN
+# Calculate the number of Nodeh
+#   If the number of cores is less than a node then we need to get a 
+#   fractional node hour count
+#   Note: the weakness here is if people are using less cores than a full
+#     node but are still using SMT. We will overcount the time for this case.
+df['Nodeh'] = df['Nodes'] * df['Runtime'] / 3600.0
+df.loc[df['Cores'] < CPN, 'Nodeh'] = df['Cores'] * df['Runtime'] / (128 * 3600.0)
 # Split JobID column into JobID and subjob ID
 df['JobID'] = df['JobID'].astype(str)
 df[['JobID','SubJobID']] = df['JobID'].str.split('.', 1, expand=True)
