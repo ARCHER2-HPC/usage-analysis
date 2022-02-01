@@ -103,6 +103,10 @@ parser.add_argument('filename', type=str, nargs=1, help='Data file containing li
 parser.add_argument('--anon', dest='outputanon', action='store_true', default=False, help='Output anonymised CSV raw job data')
 parser.add_argument('--plots', dest='makeplots', action='store_true', default=False, help='Produce data plots')
 parser.add_argument('--prefix', dest='prefix', type=str, action='store', default='scua', help='Set the prefix to be used for output files')
+parser.add_argument('-S', dest='startdate', type=str, action='store', nargs='?', default='', help='The start date specified for the report')
+parser.add_argument('-E', dest='enddate', type=str, action='store', nargs='?',default='', help='The end date specified for the report')
+parser.add_argument('-A', dest='account', type=str, action='store', nargs='?', default='', help='The slurm account specified for the report')
+parser.add_argument('-u', dest='user', type=str, action='store', nargs='?', default='', help='The user specified for the report')
 args = parser.parse_args()
 
 # Read any code definitions
@@ -209,6 +213,12 @@ print("# SCUA (Slurm Code Usage Analysis)")
 print()
 print("EPCC, 2021")
 print("----------------------------------\n")
+
+print("Time period " + args.startdate + " - " + args.enddate + " \n");
+if not args.user is None and args.user != "":
+    print("On user account " + args.user + "\n");
+if not args.account is None and args.account != "":
+    print("On slurm account " + args.account + "\n");
 
 # Print out final stats tables
 # Weighted by CU use

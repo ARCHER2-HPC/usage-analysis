@@ -97,8 +97,8 @@ sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '^[0-9]+\
 if [ -s ${SACCT_OUTPUT_FILE} ]
 then
    # We have some data, lets process it using the Python program
-   echo "Running: ${SCUA_PYTHON} ${python_opts} ${SACCT_OUTPUT_FILE}"
-   ${SCUA_PYTHON} ${python_opts} ${SACCT_OUTPUT_FILE}
+   echo "Running: ${SCUA_PYTHON} ${python_opts} ${SACCT_OUTPUT_FILE} ${startdate} ${enddate} ${extra_opts}"
+   ${SCUA_PYTHON} ${python_opts} ${SACCT_OUTPUT_FILE} ${startdate} ${enddate} ${extra_opts}
 else
    # No data, just stop
    echo "No jobs found"
