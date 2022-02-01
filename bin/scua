@@ -36,7 +36,7 @@ SCUA_PYTHON="scua.py"
 # Use :: as the delimiter to avoid issues with commas in job names
 SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter ::"
 SACCT_OUTPUT_FILE="scua_sacct.dat"
-SACCT_EXCLUDE_STATES="RUNNING|PENDING|REQUEUED"
+SACCT_EXCLUDE_STATES="RUNNING|PENDING|REQUEUED|FAILED"
 
 # Get command line options
 startdate=""
@@ -97,7 +97,7 @@ sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '^[0-9]+\
 if [ -s ${SACCT_OUTPUT_FILE} ]
 then
    # We have some data, lets process it using the Python program
-   echo "Running: ${SCUA_PYTHON} ${python_opts} ${SACCT_OUTPUT_FILE} ${startdate} ${enddate} ${extra_opts}"
+   echo "Running: ${SCUA_PYTHON} ${python_opts} ${SACCT_OUTPUT_FILE} ${startdate} ${enddate}"
    ${SCUA_PYTHON} ${python_opts} ${SACCT_OUTPUT_FILE} ${startdate} ${enddate}
 else
    # No data, just stop
