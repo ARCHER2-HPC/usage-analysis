@@ -246,7 +246,7 @@ if args.makeplots:
     plt.savefig(f'{args.prefix}_codes_usage.png', dpi=300)
     plt.clf()
     # Boxplots for top 15 software by CU use
-    topcodes = df_usage[~df_usage['Code'].isin(['Overall','Unidentified'])].head(15)
+    topcodes = df_usage['Code'].head(16).to_list()[1:]
     df_topcodes = df[df['Code'].isin(topcodes)]
     plt.figure(figsize=[8,6])
     sns.boxplot(
