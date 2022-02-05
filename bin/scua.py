@@ -149,10 +149,10 @@ df['JobID'] = df['JobID'].astype(str)
 df[['JobID','SubJobID']] = df['JobID'].str.split('.', 1, expand=True)
 
 # Identify the codes using regex from the code definitions
-df["Code"] = None
+df["Software"] = None
 for code in codes:
     codere = re.compile(code.regexp)
-    df.loc[df.ExeName.str.contains(codere), "Code"] = code.name
+    df.loc[df.ExeName.str.contains(codere), "Software"] = code.name
 
 
 if args.makeplots:
@@ -182,7 +182,7 @@ allcu = df['Nodeh'].sum()
 job_stats = []
 usage_stats = []
 for code in codes:
-    mask = df['Code'].values == code.name
+    mask = df['Software'].values == code.name
     df_code = df[mask]
     if not df_code.empty:
         # Job number stats
@@ -193,7 +193,7 @@ for code in codes:
         usage_stats.append([code.name, minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu])
 
 # Get the data for unidentified executables
-mask = df['Code'].values == None
+mask = df['Software'].values == None
 df_code = df[mask]
 if not df_code.empty:
     # Job number stats
