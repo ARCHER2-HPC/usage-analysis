@@ -256,7 +256,6 @@ if args.makeplots:
     # Boxplots for top 15 software by CU use
     topcodes = df_usage['Software'].head(16).to_list()[1:]
     df_topcodes = df[df['Software'].isin(topcodes)]
-    print(df_topcodes)
     plt.figure(figsize=[8,6])
     sns.boxplot(
         y="Software",
