@@ -154,7 +154,6 @@ for code in codes:
     codere = re.compile(code.regexp)
     df.loc[df.ExeName.str.contains(codere), "Software"] = code.name
 
-
 if args.makeplots:
     plt.figure(figsize=[6,2])
     sns.boxplot(
@@ -233,7 +232,7 @@ if not args.account is None and args.account != "":
 print('\n## Job size (in cores) by software: weighted by usage\n')
 df_usage = pd.DataFrame(usage_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse'])
 if args.webdata:
-    df.drop('Nodeh', axis=1, inplace=True)
+    df_usage.drop('Nodeh', axis=1, inplace=True)
     df_usage.sort_values('PercentUse', inplace=True, ascending=False)
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
     df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, floatfmt=".1f")
@@ -284,7 +283,7 @@ if args.makeplots:
 print('\n## Job size (in cores) by software: based on job numbers\n')
 df_job = pd.DataFrame(job_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse'])
 if args.webdata:
-    df.drop('Nodeh', axis=1, inplace=True)
+    df_job.drop('Nodeh', axis=1, inplace=True)
     df_job.sort_values('PercentUse', inplace=True, ascending=False)
     print(df_job.to_markdown(index=False, floatfmt=".1f"))
     df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, floatfmt=".1f")
