@@ -230,36 +230,36 @@ if not args.account is None and args.account != "":
 
 # Print out final stats tables
 # Weighted by CU use
-print('\n## Job size (in cores) by code: weighted by usage\n')
-df_usage = pd.DataFrame(usage_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU', 'PercentCU'])
+print('\n## Job size (in cores) by software: weighted by usage\n')
+df_usage = pd.DataFrame(usage_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', '# Jobs', '# CU', '% Use'])
 if args.webdata:
-    df.drop('TotCU', axis=1, inplace=True)
-    df_usage.sort_values('PercentCU', inplace=True, ascending=False)
+    df.drop('# CU', axis=1, inplace=True)
+    df_usage.sort_values('% Use', inplace=True, ascending=False)
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
     df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, float_format="%.1f")
     df_usage.to_csv(f'{args.prefix}_stats_by_uasge.csv', index=False, float_format="%.1f")
 else:
-    df_usage.sort_values('TotCU', inplace=True, ascending=False)
+    df_usage.sort_values('# CU', inplace=True, ascending=False)
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
     df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, float_format="%.1f")
     df_usage.to_csv(f'{args.prefix}_stats_by_uasge.csv', index=False, float_format="%.1f")
 
 if args.makeplots:
     # Bar plot of software usage
-    df_plot = df_usage[~df_usage['Code'].isin(['Overall','Unidentified'])]
+    df_plot = df_usage[~df_usage['Software'].isin(['Overall','Unidentified'])]
     plt.figure(figsize=[8,6])
-    sns.barplot(y='Code', x='PercentCU', color='lightseagreen', data=df_plot)
+    sns.barplot(y='Software', x='% Use', color='lightseagreen', data=df_plot)
     sns.despine()
-    plt.xlabel('% Usage')
+    plt.xlabel('% Use')
     plt.tight_layout()
     plt.savefig(f'{args.prefix}_codes_usage.png', dpi=300)
     plt.clf()
     # Boxplots for top 15 software by CU use
-    topcodes = df_usage['Code'].head(16).to_list()[1:]
-    df_topcodes = df[df['Code'].isin(topcodes)]
+    topcodes = df_usage['Software'].head(16).to_list()[1:]
+    df_topcodes = df[df['Software'].isin(topcodes)]
     plt.figure(figsize=[8,6])
     sns.boxplot(
-        y="Code",
+        y="Software",
         x="Cores",
         orient='h',
         color='lightseagreen',
@@ -280,23 +280,23 @@ if args.makeplots:
     plt.clf()
 
 # No weighting
-print('\n## Job size (in cores) by code: based on job numbers\n')
-df_job = pd.DataFrame(job_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU', 'PercentCU'])
+print('\n## Job size (in cores) by software: based on job numbers\n')
+df_job = pd.DataFrame(job_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', ' # Jobs', '# CU', '% Use'])
 if args.webdata:
-    df.drop('TotCU', axis=1, inplace=True)
-    df_job.sort_values('PercentCU', inplace=True, ascending=False)
+    df.drop('# CU', axis=1, inplace=True)
+    df_job.sort_values('% Use', inplace=True, ascending=False)
     print(df_job.to_markdown(index=False, floatfmt=".1f"))
     df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, float_format="%.1f")
     df_job.to_csv(f'{args.prefix}_stats_by_jobs.csv', index=False, float_format="%.1f")
 else:
-    df_job.sort_values('TotCU', inplace=True, ascending=False)
+    df_job.sort_values('# CU', inplace=True, ascending=False)
     print(df_job.to_markdown(index=False, floatfmt=".1f"))
     df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, float_format="%.1f")
     df_job.to_csv(f'{args.prefix}_stats_by_jobs.csv', index=False, float_format="%.1f")
 print()
 
 # Codes that are unidentified but have more than 1% of total use
-mask = df['Code'].values == None
+mask = df['Software'].values == None
 df_code = df[mask]
 groupf = {'Nodeh':'sum', 'Count':'sum'}
 df_group = df_code.groupby(['ExeName']).agg(groupf)
