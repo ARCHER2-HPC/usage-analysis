@@ -34,7 +34,7 @@
 # Paths to Python utilities
 SCUA_PYTHON="scua.py"
 # Use :: as the delimiter to avoid issues with commas in job names
-SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,User,Account,Partition,QOS,NNodes,NTasks,ElapsedRaw,State -P --delimiter ::"
+SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter ::"
 SACCT_OUTPUT_FILE="scua_sacct.dat"
 SACCT_EXCLUDE_STATES="RUNNING|PENDING|REQUEUED|FAILED"
 

@@ -63,13 +63,12 @@ def getjobstats(df, cu):
     totcu = df['Nodeh'].sum()
     percentcu = 100 * totcu / cu
     totjobs = df['Count'].sum()
-    nusers = df['User'].nunique()
     minjob = df['Cores'].min()
     maxjob = df['Cores'].max()
     q1job = df['Cores'].quantile(0.25)
     medjob = df['Cores'].quantile(0.5)
     q3job = df['Cores'].quantile(0.75)
-    return totcu, percentcu, totjobs, nusers, minjob, maxjob, q1job, medjob, q3job
+    return totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job
 
 # Get statistics weighted by CU (nodeh)
 def getweightedstats(df):
@@ -126,7 +125,7 @@ for file in os.listdir(codeConfigDir):
         codeDict[code.name] = nCode - 1
 
 # Read dataset (usually saved from Slurm)
-colid = ['JobID','ExeName','User','Account','Partition','QOS','Nodes','NTasks','Runtime','State']
+colid = ['JobID','ExeName','Account','Nodes','NTasks','Runtime','State']
 df = pd.read_csv(args.filename[0], names=colid, sep='::', engine='python')
 # Count helps with number of jobs
 df['Count'] = 1
@@ -187,29 +186,29 @@ for code in codes:
     df_code = df[mask]
     if not df_code.empty:
         # Job number stats
-        totcu, percentcu, totjobs, nusers, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_code, allcu)
-        job_stats.append([code.name, minjob, q1job, medjob, q3job,maxjob, nusers, totjobs,totcu, percentcu])
+        totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_code, allcu)
+        job_stats.append([code.name, minjob, q1job, medjob, q3job,maxjob, totjobs,totcu, percentcu])
         # Job stats weighed by CU (Nodeh) use
         meduse, q1use, q3use = getweightedstats(df_code)
-        usage_stats.append([code.name, minjob, q1use, meduse, q3use, maxjob, nusers, totjobs, totcu, percentcu])
+        usage_stats.append([code.name, minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu])
 
 # Get the data for unidentified executables
 mask = df['Code'].values == None
 df_code = df[mask]
 if not df_code.empty:
     # Job number stats
-    totcu, percentcu, totjobs, nusers, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_code, allcu)
-    job_stats.append(['Unidentified', minjob, q1job, medjob, q3job,maxjob, nusers, totjobs, totcu, percentcu])
+    totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_code, allcu)
+    job_stats.append(['Unidentified', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu, percentcu])
     # Usage stats
     meduse, q1use, q3use = getweightedstats(df_code)
-    usage_stats.append(['Unidentified', minjob, q1use, meduse, q3use, maxjob, nusers, totjobs, totcu, percentcu])
+    usage_stats.append(['Unidentified', minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu])
 # Get overall data for all jobs
 # Job size statistics from job numbers
-totcu, percentcu, totjobs, nusers, minjob, maxjob, q1job, medjob, q3job = getjobstats(df, allcu)
-job_stats.append(['Overall', minjob, q1job, medjob, q3job,maxjob, nusers, totjobs, totcu, percentcu])
+totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df, allcu)
+job_stats.append(['Overall', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu, percentcu])
 # Job size statistics weighted by usage
 meduse, q1use, q3use = getweightedstats(df)
-usage_stats.append(['Overall', minjob, q1use, meduse, q3use, maxjob, nusers, totjobs, totcu, percentcu])
+usage_stats.append(['Overall', minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu])
 
 # Write anonymised version of data if required
 if args.outputanon:
@@ -232,17 +231,17 @@ if not args.account is None and args.account != "":
 # Print out final stats tables
 # Weighted by CU use
 print('\n## Job size (in cores) by software: weighted by usage\n')
-df_usage = pd.DataFrame(usage_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Users', 'Jobs', 'Nodeh', 'PercentUse'])
+df_usage = pd.DataFrame(usage_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse'])
 if args.webdata:
     df.drop('Nodeh', axis=1, inplace=True)
     df_usage.sort_values('PercentUse', inplace=True, ascending=False)
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
-    df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, floatfmt="%.1f")
+    df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, floatfmt=".1f")
     df_usage.to_csv(f'{args.prefix}_stats_by_uasge.csv', index=False, float_format="%.1f")
 else:
     df_usage.sort_values('Nodeh', inplace=True, ascending=False)
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
-    df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, floatfmt="%.1f")
+    df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, floatfmt=".1f")
     df_usage.to_csv(f'{args.prefix}_stats_by_uasge.csv', index=False, float_format="%.1f")
 
 if args.makeplots:
@@ -282,17 +281,17 @@ if args.makeplots:
 
 # No weighting
 print('\n## Job size (in cores) by software: based on job numbers\n')
-df_job = pd.DataFrame(job_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Users', 'Jobs', 'Nodeh', 'PercentUse'])
+df_job = pd.DataFrame(job_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse'])
 if args.webdata:
     df.drop('Nodeh', axis=1, inplace=True)
     df_job.sort_values('PercentUse', inplace=True, ascending=False)
     print(df_job.to_markdown(index=False, floatfmt=".1f"))
-    df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, floatfmt="%.1f")
+    df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, floatfmt=".1f")
     df_job.to_csv(f'{args.prefix}_stats_by_jobs.csv', index=False, float_format="%.1f")
 else:
     df_job.sort_values('Nodeh', inplace=True, ascending=False)
     print(df_job.to_markdown(index=False, floatfmt=".1f"))
-    df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, floatfmt="%.1f")
+    df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, floatfmt=".1f")
     df_job.to_csv(f'{args.prefix}_stats_by_jobs.csv', index=False, float_format="%.1f")
 print()
 
