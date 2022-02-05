@@ -231,14 +231,14 @@ if not args.account is None and args.account != "":
 # Print out final stats tables
 # Weighted by CU use
 print('\n## Job size (in cores) by code: weighted by usage\n')
+df_usage = pd.DataFrame(usage_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU', 'PercentCU'])
 if args.webdata:
-    df_usage = pd.DataFrame(usage_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'PercentCU'])
+    df.drop('TotCU', axis=1, inplace=True)
     df_usage.sort_values('PercentCU', inplace=True, ascending=False)
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
     df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, float_format="%.1f")
     df_usage.to_csv(f'{args.prefix}_stats_by_uasge.csv', index=False, float_format="%.1f")
 else:
-    df_usage = pd.DataFrame(usage_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU', 'PercentCU'])
     df_usage.sort_values('TotCU', inplace=True, ascending=False)
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
     df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, float_format="%.1f")
@@ -281,14 +281,14 @@ if args.makeplots:
 
 # No weighting
 print('\n## Job size (in cores) by code: based on job numbers\n')
+df_job = pd.DataFrame(job_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU', 'PercentCU'])
 if args.webdata:
-    df_job = pd.DataFrame(job_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'PercentCU'])
+    df.drop('TotCU', axis=1, inplace=True)
     df_job.sort_values('PercentCU', inplace=True, ascending=False)
     print(df_job.to_markdown(index=False, floatfmt=".1f"))
     df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, float_format="%.1f")
     df_job.to_csv(f'{args.prefix}_stats_by_jobs.csv', index=False, float_format="%.1f")
 else:
-    df_job = pd.DataFrame(job_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU', 'PercentCU'])
     df_job.sort_values('TotCU', inplace=True, ascending=False)
     print(df_job.to_markdown(index=False, floatfmt=".1f"))
     df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, float_format="%.1f")
