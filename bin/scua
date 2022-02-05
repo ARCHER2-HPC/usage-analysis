@@ -44,7 +44,7 @@ enddate=""
 extra_opts=""
 keep_file=""
 python_opts=""
-while getopts ":A:E:ghkp:S:u:" opt; do
+while getopts ":A:E:ghkp:S:u:w" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} --group=${OPTARG}"
@@ -79,6 +79,9 @@ while getopts ":A:E:ghkp:S:u:" opt; do
       ;;
     u )
       extra_opts="${extra_opts} -u ${OPTARG}"
+      ;;
+    w )
+      python_opts="${python_opts} --web"
       ;;
     \? )
       echo "Invalid Option: -$OPTARG" 1>&2

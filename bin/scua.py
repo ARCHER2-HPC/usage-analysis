@@ -102,6 +102,7 @@ parser = argparse.ArgumentParser(description='Compute software usage data from S
 parser.add_argument('filename', type=str, nargs=1, help='Data file containing listing of Slurm jobs')
 parser.add_argument('--anon', dest='outputanon', action='store_true', default=False, help='Output anonymised CSV raw job data')
 parser.add_argument('--plots', dest='makeplots', action='store_true', default=False, help='Produce data plots')
+parser.add_argument('--web', dest='webdata', action='store_true', default=False, help='Produce web data')
 parser.add_argument('--prefix', dest='prefix', type=str, action='store', default='scua', help='Set the prefix to be used for output files')
 parser.add_argument('-S', dest='startdate', type=str, action='store', nargs='?', default='', help='The start date specified for the report')
 parser.add_argument('-E', dest='enddate', type=str, action='store', nargs='?',default='', help='The end date specified for the report')
@@ -230,18 +231,26 @@ if not args.account is None and args.account != "":
 # Print out final stats tables
 # Weighted by CU use
 print('\n## Job size (in cores) by code: weighted by usage\n')
-df_usage = pd.DataFrame(usage_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU', 'PercentCU'])
-df_usage.sort_values('TotCU', inplace=True, ascending=False)
-print(df_usage.to_markdown(index=False, floatfmt=".1f"))
-df_usage.to_csv(f'{args.prefix}_stats_by_uasge.csv', index=False, float_format="%.1f")
+if args.webdata:
+    df_usage = pd.DataFrame(usage_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'PercentCU'])
+    df_usage.sort_values('PercentCU', inplace=True, ascending=False)
+    print(df_usage.to_markdown(index=False, floatfmt=".1f"))
+    df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, float_format="%.1f")
+    df_usage.to_csv(f'{args.prefix}_stats_by_uasge.csv', index=False, float_format="%.1f")
+else:
+    df_usage = pd.DataFrame(usage_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU', 'PercentCU'])
+    df_usage.sort_values('TotCU', inplace=True, ascending=False)
+    print(df_usage.to_markdown(index=False, floatfmt=".1f"))
+    df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, float_format="%.1f")
+    df_usage.to_csv(f'{args.prefix}_stats_by_uasge.csv', index=False, float_format="%.1f")
 
 if args.makeplots:
     # Bar plot of software usage
     df_plot = df_usage[~df_usage['Code'].isin(['Overall','Unidentified'])]
     plt.figure(figsize=[8,6])
-    sns.barplot(y='Code', x='TotCU', color='lightseagreen', data=df_plot)
+    sns.barplot(y='Code', x='PercentCU', color='lightseagreen', data=df_plot)
     sns.despine()
-    plt.xlabel('Total CU')
+    plt.xlabel('% Usage')
     plt.tight_layout()
     plt.savefig(f'{args.prefix}_codes_usage.png', dpi=300)
     plt.clf()
@@ -272,10 +281,18 @@ if args.makeplots:
 
 # No weighting
 print('\n## Job size (in cores) by code: based on job numbers\n')
-df_job = pd.DataFrame(job_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU', 'PercentCU'])
-df_job.sort_values('TotCU', inplace=True, ascending=False)
-print(df_job.to_markdown(index=False, floatfmt=".1f"))
-df_job.to_csv(f'{args.prefix}_stats_by_jobs.csv', index=False, float_format="%.1f")
+if args.webdata:
+    df_job = pd.DataFrame(job_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'PercentCU'])
+    df_job.sort_values('PercentCU', inplace=True, ascending=False)
+    print(df_job.to_markdown(index=False, floatfmt=".1f"))
+    df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, float_format="%.1f")
+    df_job.to_csv(f'{args.prefix}_stats_by_jobs.csv', index=False, float_format="%.1f")
+else:
+    df_job = pd.DataFrame(job_stats, columns=['Code', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'TotJobs', 'TotCU', 'PercentCU'])
+    df_job.sort_values('TotCU', inplace=True, ascending=False)
+    print(df_job.to_markdown(index=False, floatfmt=".1f"))
+    df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, float_format="%.1f")
+    df_job.to_csv(f'{args.prefix}_stats_by_jobs.csv', index=False, float_format="%.1f")
 print()
 
 # Codes that are unidentified but have more than 1% of total use
