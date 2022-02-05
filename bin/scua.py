@@ -231,15 +231,15 @@ if not args.account is None and args.account != "":
 # Print out final stats tables
 # Weighted by CU use
 print('\n## Job size (in cores) by software: weighted by usage\n')
-df_usage = pd.DataFrame(usage_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', '# Jobs', '# CU', '% Use'])
+df_usage = pd.DataFrame(usage_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse'])
 if args.webdata:
-    df.drop('# CU', axis=1, inplace=True)
-    df_usage.sort_values('% Use', inplace=True, ascending=False)
+    df.drop('Nodeh', axis=1, inplace=True)
+    df_usage.sort_values('PercentUse', inplace=True, ascending=False)
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
     df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, float_format="%.1f")
     df_usage.to_csv(f'{args.prefix}_stats_by_uasge.csv', index=False, float_format="%.1f")
 else:
-    df_usage.sort_values('# CU', inplace=True, ascending=False)
+    df_usage.sort_values('Nodeh', inplace=True, ascending=False)
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
     df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, float_format="%.1f")
     df_usage.to_csv(f'{args.prefix}_stats_by_uasge.csv', index=False, float_format="%.1f")
@@ -248,9 +248,9 @@ if args.makeplots:
     # Bar plot of software usage
     df_plot = df_usage[~df_usage['Software'].isin(['Overall','Unidentified'])]
     plt.figure(figsize=[8,6])
-    sns.barplot(y='Software', x='% Use', color='lightseagreen', data=df_plot)
+    sns.barplot(y='Software', x='PercentUse', color='lightseagreen', data=df_plot)
     sns.despine()
-    plt.xlabel('% Use')
+    plt.xlabel('PercentUse')
     plt.tight_layout()
     plt.savefig(f'{args.prefix}_codes_usage.png', dpi=300)
     plt.clf()
@@ -281,15 +281,15 @@ if args.makeplots:
 
 # No weighting
 print('\n## Job size (in cores) by software: based on job numbers\n')
-df_job = pd.DataFrame(job_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', ' # Jobs', '# CU', '% Use'])
+df_job = pd.DataFrame(job_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse'])
 if args.webdata:
-    df.drop('# CU', axis=1, inplace=True)
-    df_job.sort_values('% Use', inplace=True, ascending=False)
+    df.drop('Nodeh', axis=1, inplace=True)
+    df_job.sort_values('PercentUse', inplace=True, ascending=False)
     print(df_job.to_markdown(index=False, floatfmt=".1f"))
     df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, float_format="%.1f")
     df_job.to_csv(f'{args.prefix}_stats_by_jobs.csv', index=False, float_format="%.1f")
 else:
-    df_job.sort_values('# CU', inplace=True, ascending=False)
+    df_job.sort_values('Nodeh', inplace=True, ascending=False)
     print(df_job.to_markdown(index=False, floatfmt=".1f"))
     df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, float_format="%.1f")
     df_job.to_csv(f'{args.prefix}_stats_by_jobs.csv', index=False, float_format="%.1f")
