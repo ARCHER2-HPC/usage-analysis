@@ -23,8 +23,8 @@ name: Xcompact3d
 regexp: xcompact3d
 
 [metadata]
-primary language: Fortran90
-version:          
+primary language: Fortran
+version:          90
 
 academic license: Open Source
 commercial license: Open Source
