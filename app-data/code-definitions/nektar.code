@@ -20,7 +20,7 @@
 
 [code info]
 name: Nektar++
-regexp: IncNavierStok
+regexp: IncNavierStok|CompressibleFlowSolver|APESolver|AcousticSolver
 
 [metadata]
 primary language: C++
