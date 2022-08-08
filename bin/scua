@@ -12,7 +12,7 @@
 # can use the scua.py program directly.
 #
 #----------------------------------------------------------------------
-# Copyright 2021 EPCC, The University of Edinburgh
+# Copyright 2021, 2022 EPCC, The University of Edinburgh
 #
 # This file is part of usage-analysis.
 #
@@ -34,7 +34,7 @@
 # Paths to Python utilities
 SCUA_PYTHON="scua.py"
 # Use :: as the delimiter to avoid issues with commas in job names
-SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter ::"
+SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State,ConsumedEnergyRaw,MaxRSS,AveRSS -P --delimiter ::"
 SACCT_OUTPUT_FILE="scua_sacct.dat"
 SACCT_EXCLUDE_STATES="RUNNING|PENDING|REQUEUED|FAILED"
 
@@ -43,8 +43,9 @@ startdate=""
 enddate=""
 extra_opts=""
 keep_file=""
+run_python=1
 python_opts=""
-while getopts ":A:E:ghkp:S:u:w" opt; do
+while getopts ":A:E:ghknp:S:u:w" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} --group=${OPTARG}"
@@ -58,6 +59,7 @@ while getopts ":A:E:ghkp:S:u:w" opt; do
       echo " -A account      Limit to specified account code, e.g. z01"
       echo " -E date/time    End date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
       echo " -k              Keeps the intermediate output from sacct in: ${SACCT_OUTPUT_FILE}"
+      echo " -n              Do not run Python analysis - just produce data file"
       echo " -g              Produce graphs of usage data (as png)"
       echo " -h              Show this help"
       echo " -p prefix       Prefix for output file names"
@@ -67,6 +69,9 @@ while getopts ":A:E:ghkp:S:u:w" opt; do
       ;;
     k )
       keep_file=1
+      ;;
+    n )
+      run_python=""
       ;;
     g )
       python_opts="${python_opts} --plots"
@@ -97,6 +102,12 @@ shift $((OPTIND -1))
 
 extra_opts="${extra_opts} -a"
 sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '^[0-9]+\.[0-9]' | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_OUTPUT_FILE}
+
+if [ -z ${run_python} ]
+then
+  exit 0
+fi
+
 if [ -s ${SACCT_OUTPUT_FILE} ]
 then
    # We have some data, lets process it using the Python program
