@@ -22,7 +22,7 @@
 # The egrep extracts all subjobs and then excludes specific job states
 #
 #----------------------------------------------------------------------
-# Copyright 2021 EPCC, The University of Edinburgh
+# Copyright 2021, 2022 EPCC, The University of Edinburgh
 #
 # This file is part of usage-analysis.
 #
@@ -59,16 +59,18 @@ pd.options.mode.chained_assignment = None
 # Functions to compute statistics
 #=======================================================
 # Get statistics based on numbers of jobs
-def getjobstats(df, cu):
+def getjobstats(df, cu, en):
     totcu = df['Nodeh'].sum()
     percentcu = 100 * totcu / cu
+    toten = df['Energy'].sum()
+    percenten = 100 * toten / en
     totjobs = df['Count'].sum()
     minjob = df['Cores'].min()
     maxjob = df['Cores'].max()
     q1job = df['Cores'].quantile(0.25)
     medjob = df['Cores'].quantile(0.5)
     q3job = df['Cores'].quantile(0.75)
-    return totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job
+    return totcu, percentcu, toten, percenten, totjobs, minjob, maxjob, q1job, medjob, q3job
 
 # Get statistics weighted by CU (nodeh)
 def getweightedstats(df):
@@ -100,7 +102,6 @@ CPN = 128
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='Compute software usage data from Slurm output.')
 parser.add_argument('filename', type=str, nargs=1, help='Data file containing listing of Slurm jobs')
-parser.add_argument('--anon', dest='outputanon', action='store_true', default=False, help='Output anonymised CSV raw job data')
 parser.add_argument('--plots', dest='makeplots', action='store_true', default=False, help='Produce data plots')
 parser.add_argument('--web', dest='webdata', action='store_true', default=False, help='Produce web data')
 parser.add_argument('--prefix', dest='prefix', type=str, action='store', default='scua', help='Set the prefix to be used for output files')
@@ -125,10 +126,17 @@ for file in os.listdir(codeConfigDir):
         codeDict[code.name] = nCode - 1
 
 # Read dataset (usually saved from Slurm)
-colid = ['JobID','ExeName','Account','Nodes','NTasks','Runtime','State']
+colid = ['JobID','ExeName','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS']
 df = pd.read_csv(args.filename[0], names=colid, sep='::', engine='python')
 # Count helps with number of jobs
 df['Count'] = 1
+
+# Convert energy to numeric type
+df['Energy'] = pd.to_numeric(df['Energy'], errors='coerce')
+# Remove unrealistic values (presumably due to counter errors)
+df['Energy'].mask(df['Energy'].gt(1e16), inplace=True)
+# Convert the energy to kWh
+df['Energy'] = df['Energy'] / 3600000.0
 
 # This section is to get the number of used cores, we need to make sure we catch
 # jobs where people are using SMT and do not count the size of these wrong
@@ -137,16 +145,26 @@ df['cpn'] = df['NTasks'] / df['Nodes']
 df['Cores'] = df['NTasks']
 # Catch those cases where jobs are using SMT and recompute core count
 df.loc[df['cpn'] > CPN, 'Cores'] = df['Nodes'] * CPN
+
 # Calculate the number of Nodeh
 #   If the number of cores is less than a node then we need to get a 
-#   fractional node hour count
+#   fractional node hour count and fractional energy
+#   Note: energy from Slurm is taken from node-level counters so if there 
+#     are multiple job steps per node they are all assigned the full node
+#     energy
 #   Note: the weakness here is if people are using less cores than a full
 #     node but are still using SMT. We will overcount the time for this case.
 df['Nodeh'] = df['Nodes'] * df['Runtime'] / 3600.0
-df.loc[df['Cores'] < CPN, 'Nodeh'] = df['Cores'] * df['Runtime'] / (128 * 3600.0)
+df.loc[df['Cores'] < CPN, 'Nodeh'] = df['Cores'] * df['Runtime'] / (CPN * 3600.0)
+df.loc[df['Cores'] < CPN, 'Energy'] = df['Cores'] * df['Energy'] / CPN 
+
 # Split JobID column into JobID and subjob ID
 df['JobID'] = df['JobID'].astype(str)
 df[['JobID','SubJobID']] = df['JobID'].str.split('.', 1, expand=True)
+
+# Split Account column into ProjectID and GroupID
+df['JobID'] = df['JobID'].astype(str)
+df[['ProjectID','GroupID']] = df['Account'].str.split('-', 1, expand=True)
 
 # Identify the codes using regex from the code definitions
 df["Software"] = None
@@ -178,6 +196,7 @@ if args.makeplots:
 
 # Loop over codes getting the statistics
 allcu = df['Nodeh'].sum()
+allen = df['Energy'].sum()
 job_stats = []
 usage_stats = []
 for code in codes:
@@ -185,40 +204,35 @@ for code in codes:
     df_code = df[mask]
     if not df_code.empty:
         # Job number stats
-        totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_code, allcu)
-        job_stats.append([code.name, minjob, q1job, medjob, q3job,maxjob, totjobs,totcu, percentcu])
+        totcu, percentcu, toten, percenten, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_code, allcu, allen)
+        job_stats.append([code.name, minjob, q1job, medjob, q3job,maxjob, totjobs,totcu, percentcu, toten, percenten])
         # Job stats weighed by CU (Nodeh) use
         meduse, q1use, q3use = getweightedstats(df_code)
-        usage_stats.append([code.name, minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu])
+        usage_stats.append([code.name, minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu, toten, percenten])
 
 # Get the data for unidentified executables
 mask = df['Software'].values == None
 df_code = df[mask]
 if not df_code.empty:
     # Job number stats
-    totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_code, allcu)
-    job_stats.append(['Unidentified', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu, percentcu])
+    totcu, percentcu, toten, percenten, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_code, allcu, allen)
+    job_stats.append(['Unidentified', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu, percentcu, toten, percenten])
     # Usage stats
     meduse, q1use, q3use = getweightedstats(df_code)
-    usage_stats.append(['Unidentified', minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu])
+    usage_stats.append(['Unidentified', minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu, toten, percenten])
 # Get overall data for all jobs
 # Job size statistics from job numbers
-totcu, percentcu, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df, allcu)
-job_stats.append(['Overall', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu, percentcu])
+totcu, percentcu, toten, percenten, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df, allcu, allen)
+job_stats.append(['Overall', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu, percentcu, toten, percenten])
 # Job size statistics weighted by usage
 meduse, q1use, q3use = getweightedstats(df)
-usage_stats.append(['Overall', minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu])
-
-# Write anonymised version of data if required
-if args.outputanon:
-    df['Account'] = 'anon'
-    df.to_csv(f'{args.prefix}_sacct.csv', index=False, na_rep="None")
+usage_stats.append(['Overall', minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu, toten, percenten])
 
 # Output data
 print("\n----------------------------------")
 print("# SCUA (Slurm Code Usage Analysis)")
 print()
-print("EPCC, 2021")
+print("EPCC, 2021, 2022")
 print("----------------------------------\n")
 
 print("Time period " + args.startdate + " - " + args.enddate + " \n");
@@ -230,7 +244,7 @@ if not args.account is None and args.account != "":
 # Print out final stats tables
 # Weighted by CU use
 print('\n## Job size (in cores) by software: weighted by usage\n')
-df_usage = pd.DataFrame(usage_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse'])
+df_usage = pd.DataFrame(usage_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy'])
 if args.webdata:
     df_usage.drop('Nodeh', axis=1, inplace=True)
     df_usage.sort_values('PercentUse', inplace=True, ascending=False)
@@ -280,7 +294,7 @@ if args.makeplots:
 
 # No weighting
 print('\n## Job size (in cores) by software: based on job numbers\n')
-df_job = pd.DataFrame(job_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse'])
+df_job = pd.DataFrame(job_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy'])
 if args.webdata:
     df_job.drop('Nodeh', axis=1, inplace=True)
     df_job.sort_values('PercentUse', inplace=True, ascending=False)
@@ -304,4 +318,12 @@ thresh = totcu * 0.01
 print('\n## Unidentified executables with significant use\n')
 print(df_group.loc[df_group['Nodeh'] >= thresh].to_markdown(floatfmt=".1f"))
 print()
+
+# Check quality of energy data
+nNaN = df['Energy'].isna().sum()
+nRow = df.shape[0]
+print('\n## Energy data quality check\n')
+print(f'{"Number of subjobs =":>30s} {nRow:>10d}')
+print(f'{"Subjobs missing energy =":>30s} {nNaN:>10d} ({100*nNaN/nRow:.2f}%)\n')
+
 
