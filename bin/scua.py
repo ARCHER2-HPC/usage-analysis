@@ -1,7 +1,7 @@
 #!/usr//bin/env python
 # scua.py (Slurm Code Usage Analysis)
 #
-# usage: scua.py [-h] [--plots] [--prefix=PREFIX] filename
+# usage: scua.py [options] filename
 #
 # Compute software usage data from Slurm output.
 # 
@@ -9,14 +9,11 @@
 #  filename         Data file containing listing of Slurm jobs
 #
 # optional arguments:
-#   -h, --help       show this help message and exit
-#   --anon           output anonymised CSV raw job data
-#   --plots          Produce data plots
-#   --prefix=PREFIX  Set the prefix to be used for output files
+#   -h, --help       show list of arguments
 #
 # The data file is the output for Slurm sacct, produced in using a 
 # command such as:
-#   sacct --format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State -P --delimiter :: \
+#   sacct --format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State,ConsumedEnergyRaw,MaxRSS,AveRSS -P --delimiter :: \
 #        | egrep '[0-9]\.[0-9]' | egrep -v "RUNNING|PENDING|REQUEUED"
 #
 # The egrep extracts all subjobs and then excludes specific job states
@@ -49,6 +46,7 @@ import os
 import re
 import fnmatch
 import argparse
+import csv
 from matplotlib import pyplot as plt
 import seaborn as sns
 from code_def import CodeDef
@@ -104,9 +102,9 @@ parser = argparse.ArgumentParser(description='Compute software usage data from S
 parser.add_argument('filename', type=str, nargs=1, help='Data file containing listing of Slurm jobs')
 parser.add_argument('--plots', dest='makeplots', action='store_true', default=False, help='Produce data plots')
 parser.add_argument('--web', dest='webdata', action='store_true', default=False, help='Produce web data')
+parser.add_argument('--dropnan', dest='dropnan', action='store_true', default=False, help='Drop all rows that contain NaN. Useful for strict comparisons between usage and energy use.')
 parser.add_argument('--prefix', dest='prefix', type=str, action='store', default='scua', help='Set the prefix to be used for output files')
-parser.add_argument('-S', dest='startdate', type=str, action='store', nargs='?', default='', help='The start date specified for the report')
-parser.add_argument('-E', dest='enddate', type=str, action='store', nargs='?',default='', help='The end date specified for the report')
+parser.add_argument('--projects', dest='projlist', type=str, action='store', default=None, help='The file containing a list of project IDs and associated research areas')
 parser.add_argument('-A', dest='account', type=str, action='store', nargs='?', default='', help='The slurm account specified for the report')
 parser.add_argument('-u', dest='user', type=str, action='store', nargs='?', default='', help='The user specified for the report')
 args = parser.parse_args()
@@ -125,6 +123,16 @@ for file in os.listdir(codeConfigDir):
         codes.append(code)
         codeDict[code.name] = nCode - 1
 
+# Read project research areas if required
+areadict = {}
+arealist = []
+if args.projlist is not None:
+    projfile = open(args.projlist, 'r')
+    next(projfile)  # Skip header
+    reader = csv.reader(projfile, skipinitialspace=True)
+    areadict  = dict(reader)
+    areaset = set(areadict.values()) # Unique area names
+
 # Read dataset (usually saved from Slurm)
 colid = ['JobID','ExeName','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS']
 df = pd.read_csv(args.filename[0], names=colid, sep='::', engine='python')
@@ -137,6 +145,9 @@ df['Energy'] = pd.to_numeric(df['Energy'], errors='coerce')
 df['Energy'].mask(df['Energy'].gt(1e16), inplace=True)
 # Convert the energy to kWh
 df['Energy'] = df['Energy'] / 3600000.0
+# Check if we are dropping rows without energy values
+if args.dropnan:
+    df.dropna(axis=0, how='any', inplace=True)
 
 # This section is to get the number of used cores, we need to make sure we catch
 # jobs where people are using SMT and do not count the size of these wrong
@@ -171,6 +182,10 @@ df["Software"] = None
 for code in codes:
     codere = re.compile(code.regexp)
     df.loc[df.ExeName.str.contains(codere), "Software"] = code.name
+
+# Add research areas if supplied
+if args.projlist is not None:
+    df['Area'] = df['ProjectID'].map(areadict)
 
 if args.makeplots:
     plt.figure(figsize=[6,2])
@@ -235,28 +250,34 @@ print()
 print("EPCC, 2021, 2022")
 print("----------------------------------\n")
 
-print("Time period " + args.startdate + " - " + args.enddate + " \n");
 if not args.user is None and args.user != "":
     print("On user account " + args.user + "\n");
 if not args.account is None and args.account != "":
     print("On slurm account " + args.account + "\n");
+if args.dropnan:
+    print("Dropping job steps with no energy values recorded\n");
 
+######################################################################
+# Software usage data
+#
 # Print out final stats tables
-# Weighted by CU use
+#    Weighted by CU use
 print('\n## Job size (in cores) by software: weighted by usage\n')
 df_usage = pd.DataFrame(usage_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy'])
 if args.webdata:
     df_usage.drop('Nodeh', axis=1, inplace=True)
+    df_usage.drop('kWh', axis=1, inplace=True)
     df_usage.sort_values('PercentUse', inplace=True, ascending=False)
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
     df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, floatfmt=".1f")
-    df_usage.to_csv(f'{args.prefix}_stats_by_uasge.csv', index=False, float_format="%.1f")
+    df_usage.to_csv(f'{args.prefix}_stats_by_usage.csv', index=False, float_format="%.1f")
 else:
     df_usage.sort_values('Nodeh', inplace=True, ascending=False)
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
     df_usage.to_markdown(f'{args.prefix}_stats_by_uasge.md', index=False, floatfmt=".1f")
-    df_usage.to_csv(f'{args.prefix}_stats_by_uasge.csv', index=False, float_format="%.1f")
+    df_usage.to_csv(f'{args.prefix}_stats_by_usage.csv', index=False, float_format="%.1f")
 
+# Software usage plots
 if args.makeplots:
     # Bar plot of software usage
     df_plot = df_usage[~df_usage['Software'].isin(['Overall','Unidentified'])]
@@ -292,11 +313,12 @@ if args.makeplots:
     plt.savefig(f'{args.prefix}_top15_boxplot.png', dpi=300)
     plt.clf()
 
-# No weighting
+# Software usage based on job numbers
 print('\n## Job size (in cores) by software: based on job numbers\n')
 df_job = pd.DataFrame(job_stats, columns=['Software', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy'])
 if args.webdata:
     df_job.drop('Nodeh', axis=1, inplace=True)
+    df_job.drop('kWh', axis=1, inplace=True)
     df_job.sort_values('PercentUse', inplace=True, ascending=False)
     print(df_job.to_markdown(index=False, floatfmt=".1f"))
     df_job.to_markdown(f'{args.prefix}_stats_by_jobs.md', index=False, floatfmt=".1f")
@@ -308,7 +330,8 @@ else:
     df_job.to_csv(f'{args.prefix}_stats_by_jobs.csv', index=False, float_format="%.1f")
 print()
 
-# Codes that are unidentified but have more than 1% of total use
+
+# Software that are unidentified but have more than 1% of total use
 mask = df['Software'].values == None
 df_code = df[mask]
 groupf = {'Nodeh':'sum', 'Count':'sum'}
@@ -319,11 +342,58 @@ print('\n## Unidentified executables with significant use\n')
 print(df_group.loc[df_group['Nodeh'] >= thresh].to_markdown(floatfmt=".1f"))
 print()
 
+######################################################################
 # Check quality of energy data
+#
 nNaN = df['Energy'].isna().sum()
+NaNUsage = df.loc[df['Energy'].isna(), 'Nodeh'].sum()
 nRow = df.shape[0]
 print('\n## Energy data quality check\n')
 print(f'{"Number of subjobs =":>30s} {nRow:>10d}')
-print(f'{"Subjobs missing energy =":>30s} {nNaN:>10d} ({100*nNaN/nRow:.2f}%)\n')
+print(f'{"Subjobs missing energy =":>30s} {nNaN:>10d} ({100*nNaN/nRow:.2f}%)')
+print(f'{"Usage missing energy =":>30s} {NaNUsage:>10.1f} Nodeh ({100*NaNUsage/allcu:.2f}%)\n')
+
+######################################################################
+# Breakdown by research area (if requested)
+#
+if args.projlist is not None:
+    # Loop over unique research areas accumulating data
+    job_stats = []
+    usage_stats = []
+    for area in areaset:
+        mask = df['Area'].values == area
+        df_area = df[mask]
+        if not df_area.empty:
+            # Job number stats
+            totcu, percentcu, toten, percenten, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df_area, allcu, allen)
+            job_stats.append([area, minjob, q1job, medjob, q3job,maxjob, totjobs,totcu, percentcu, toten, percenten])
+            # Job stats weighed by CU (Nodeh) use
+            meduse, q1use, q3use = getweightedstats(df_area)
+            usage_stats.append([area, minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu, toten, percenten])
+    # Get overall data for all jobs
+    # Job size statistics from job numbers
+    totcu, percentcu, toten, percenten, totjobs, minjob, maxjob, q1job, medjob, q3job = getjobstats(df, allcu, allen)
+    job_stats.append(['Overall', minjob, q1job, medjob, q3job,maxjob, totjobs, totcu, percentcu, toten, percenten])
+    # Job size statistics weighted by usage
+    meduse, q1use, q3use = getweightedstats(df)
+    usage_stats.append(['Overall', minjob, q1use, meduse, q3use, maxjob, totjobs, totcu, percentcu, toten, percenten])
+
+    # Print out are stats tables
+    # Weighted by CU use
+    print('\n## Job size (in cores) by area: weighted by usage\n')
+    df_usage = pd.DataFrame(usage_stats, columns=['Area', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy'])
+    if args.webdata:
+        df_usage.drop('Nodeh', axis=1, inplace=True)
+        df_usage.drop('kWh', axis=1, inplace=True)
+        df_usage.sort_values('Nodeh', inplace=True, ascending=False)
+        print(df_usage.to_markdown(index=False, floatfmt=".1f"))
+        df_usage.to_csv(f'{args.prefix}_area_by_usage.csv', index=False, float_format="%.1f")
+    else:
+        df_usage.sort_values('Nodeh', inplace=True, ascending=False)
+        print(df_usage.to_markdown(index=False, floatfmt=".1f"))
+        df_usage.to_csv(f'{args.prefix}_area_by_usage.csv', index=False, float_format="%.1f")
+    print()
+
+        
 
 

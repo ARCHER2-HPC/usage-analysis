@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+######################################################
+# combine_csv
+#   Helper script to combine multiple CSV files into 
+#   a single CSV
+#
+# Usage:
+#   combine_csv <directory> <file pattern> <column>
+#
+#   <directory> - Directory containing the CSV files to combine
+#   <file pattern> - Name of the files to be combined. e.g.
+#                    "usage_data" would combine all files
+#                    *usage_data.csv in <directory>
+#   <column> = Column name to aggregate (sum) on
+#
+# Combined data will be written to terminal and to a file 
+# named "combined.csv".
+#
+import pandas as pd
+import glob
+import os
+import sys
+
+# Read the arguments
+mydir = sys.argv[1]
+mypattern = "*" + sys.argv[2].strip() + ".csv" 
+mycol = sys.argv[3]
+  
+# Get globbing pattern
+joined_files = os.path.join(mydir, mypattern)
+  
+# List of files that match the glob
+joined_list = glob.glob(joined_files)
+  
+# Combine all files into a single dataframe
+df = pd.concat(map(pd.read_csv, joined_list), ignore_index=True)
+df.set_index(mycol, inplace=True)
+
+# Aggregate by specified column
+grouped = df.groupby(mycol)[['kWh', 'Nodeh']].sum()
+# Compute totals
+allcu = grouped.at['Overall', 'Nodeh']
+allen = grouped.at['Overall', 'kWh']
+# Add percent columns
+grouped['PercentEnergy'] = 100.0 * grouped['kWh'] / allen
+grouped['PercentUse'] = 100.0 * grouped['Nodeh'] / allcu
+# Sort and print out the combined data
+grouped.sort_values('Nodeh', inplace=True, ascending=False)
+print(grouped.to_markdown(index=True, floatfmt=".1f"))
+grouped.to_csv('combined.csv', index=True, float_format="%.1f")
