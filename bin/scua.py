@@ -187,6 +187,11 @@ for code in codes:
 if args.projlist is not None:
     df['Area'] = df['ProjectID'].map(areadict)
 
+# Restrict to specified project code if requested
+if args.account:
+    df.drop(df[df.ProjectID != args.account].index, inplace=True)
+    print(df)
+
 if args.makeplots:
     plt.figure(figsize=[6,2])
     sns.boxplot(
