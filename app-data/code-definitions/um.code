@@ -18,9 +18,11 @@
 #----------------------------------------------------------------------
 #
 
+# 2022-08-19: "env" added as there is a large amount of use on ARCHER2
+#             that is with this command that matches to UM jobs
 [code info]
 name: Met Office UM
-regexp: ^[a-z]{5}\.exe|um_atmos|um_atmos\.exe|um-atmos\.exe
+regexp: ^[a-z]{5}\.exe|um_atmos|um_atmos\.exe|um-atmos\.exe|env
 
 [metadata]
 primary language: Fortran
