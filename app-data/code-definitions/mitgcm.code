@@ -29,7 +29,7 @@ version:          95
 academic license: Open Source
 commercial license: Open Source
 
-code type: Structured Grid
+code type: StructuredGrid
 
 research area: Climate/Ocean Modelling
 parallel-model: MPI

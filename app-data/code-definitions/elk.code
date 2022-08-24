@@ -29,7 +29,7 @@ version:          95
 academic license: Open Source
 commercial license: Open Source
 
-code type: Periodic Electronic Structure
+code type: DenseLinearAlgebra SpectralMethods
 
 research area: Materials Science
 parallel-model: MPI+OpenMP

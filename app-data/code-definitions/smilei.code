@@ -29,7 +29,7 @@ version:          14
 academic license: Open Source (CeCILL-B)
 commercial license: Open Source (CeCILL-B)
 
-code type: Particle in Cell
+code type: StructuredGrid NBodyMethods
 
 research area: Plasma Science
 parallel-model: MPI+OpenMP

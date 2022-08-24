@@ -29,7 +29,7 @@ version:          95
 academic license: Academic Free
 commercial license: Fee Payment
 
-code type: Periodic Electronic Structure
+code type: DenseLinearAlgebra SpectralMethods
 
 research area: Materials Science
 parallel-model: MPI+SharedMem

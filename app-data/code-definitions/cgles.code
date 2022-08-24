@@ -29,7 +29,7 @@ version:
 academic license: None
 commercial license: None
 
-code type: Unstructured Grid
+code type: UnstructuredGrid
 
 research area: Computational Fluid Dynamics
 parallel-model: MPI

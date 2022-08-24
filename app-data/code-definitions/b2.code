@@ -29,7 +29,7 @@ version:          95
 academic license: Academic Free
 commercial license: Academic Free
 
-code type: Structured Grid
+code type: StructuredGrid
 
 research area: Plasma Science
 parallel-model: MPI

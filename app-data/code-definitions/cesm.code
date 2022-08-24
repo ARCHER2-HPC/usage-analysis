@@ -29,7 +29,7 @@ version:          95
 academic license: Fee Payment
 commercial license: Fee Payment
 
-code type: Structured Grid
+code type: StructuredGrid
 
 research area: Climate/Ocean Modelling
 parallel-model: MPI 

@@ -29,7 +29,7 @@ version:          90
 academic license: None
 commercial license: None
 
-code type: Structured Grid
+code type: StructuredGrid
 
 research area: Computational Fluid Dynamics
 parallel-model: MPI+OpenMP

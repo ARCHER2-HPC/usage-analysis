@@ -29,7 +29,7 @@ version:          95
 academic license: Academic Free
 commercial license: Fee Payment
 
-code type: Quantum Chemistry
+code type: DenseLinearAlgebra
 
 research area: Chemistry
 parallel-model: DMAPP

@@ -29,7 +29,7 @@ version:
 academic license: Free
 commercial license: Fee
 
-code type: Monte Carlo
+code type: MonteCarloMethods
 
 research area: Materials Science
 parallel-model: MPI
