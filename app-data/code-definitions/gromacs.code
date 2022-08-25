@@ -20,7 +20,7 @@
 
 [code info]
 name: Gromacs
-regexp: mdrun|gmx_mpi
+regexp: mdrun|gmx
 
 [metadata]
 primary language: C
