@@ -1,11 +1,4 @@
-# Usage Analysis Tools
-
-This repository contains usage analysis tools used on the
-[UK National Supercomputing Service, ARCHER2](https://www.archer2.ac.uk) along
-with historical data from the analysis of service usage. Information on the 
-individual tools is provided below.
-
-## Slurm Code Usage Analysis, SCUA
+# Slurm Code Usage Analysis, SCUA
 
 The SCUA tool queries the Slurm accounting database, extracts data on job steps 
 and uses this data to match the executable names to a known set of applications.
