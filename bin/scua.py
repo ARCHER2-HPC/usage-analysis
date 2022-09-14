@@ -235,7 +235,9 @@ if args.account:
     df.drop(df[df.ProjectID != args.account].index, inplace=True)
     print(df)
 
+# Plots that only depend on full dataframe
 if args.makeplots:
+    # Overall boxplot of sizes in cores weighted by usage
     plt.figure(figsize=[6,2])
     sns.boxplot(
         x="Cores",
@@ -256,6 +258,16 @@ if args.makeplots:
     plt.tight_layout()
     plt.savefig(f'{args.prefix}_overall_boxplot.png', dpi=300)
     plt.clf()
+    
+    # Histogram of node power use distribution
+    dfnan = df.dropna()
+    plt.figure(figsize=[8,6])
+    dfnan["NodePower"].plot(kind="hist", weights=dfnan["Energy"], bins=20)
+    plt.xlabel('Node Power / W')
+    plt.ylabel('Energy / kWh')
+    sns.despine()
+    plt.tight_layout()
+    plt.savefig(f'{args.prefix}_node_power_distribution.png', dpi=300)
 
 print("\n----------------------------------")
 print("# SCUA (Slurm Code Usage Analysis)")
@@ -270,41 +282,7 @@ if not args.account is None and args.account != "":
 if args.dropnan:
     print("Dropping job steps with no energy values recorded\n");
 
-# Software usage plots
-if args.makeplots:
-    # Bar plot of software usage
-    df_plot = df_usage[~df_usage['Software'].isin(['Overall','Unidentified'])]
-    plt.figure(figsize=[8,6])
-    sns.barplot(y='Software', x='PercentUse', color='lightseagreen', data=df_plot)
-    sns.despine()
-    plt.xlabel('PercentUse')
-    plt.tight_layout()
-    plt.savefig(f'{args.prefix}_codes_usage.png', dpi=300)
-    plt.clf()
-    # Boxplots for top 15 software by CU use
-    topcodes = df_usage['Software'].head(16).to_list()[1:]
-    df_topcodes = df[df['Software'].isin(topcodes)]
-    plt.figure(figsize=[8,6])
-    sns.boxplot(
-        y="Software",
-        x="Cores",
-        orient='h',
-        color='lightseagreen',
-        order=topcodes,
-        showmeans=True,
-        meanprops={
-            "marker":"o",
-            "markerfacecolor":"white",
-            "markeredgecolor":"black",
-            "markersize":"5"
-            },
-        data=reindex_df(df_topcodes, weight_col='Nodeh')
-        )
-    plt.xlabel('Cores')
-    sns.despine()
-    plt.tight_layout()
-    plt.savefig(f'{args.prefix}_top15_boxplot.png', dpi=300)
-    plt.clf()
+
 
 ######################################################################
 # Data quality checks
@@ -475,3 +453,74 @@ for output in outputs:
         df_usage.to_csv(f'{args.prefix}_{output}_weighted.csv', index=False, float_format="%.1f")
 
 
+######################################################################
+# Plot any data that depends on derived statistics
+#   This section is a hack and should be replaced by a proper approach!
+#
+if args.makeplots:
+    df_output = df
+
+    job_stats = []
+    usage_stats = []
+    categories = codelist
+    # The category column and analysis columns
+    catcol = 'Software'
+    ancol = 'Cores'
+    for category in categories:
+        mask = df_output[catcol].str.contains(re.escape(category), na=False)
+        df_cat = df_output[mask]
+        if not df_cat.empty:
+            dist, wdist = distribution(df_cat, category, allcu, allen, ancol, 'Nodeh')
+            job_stats.append(dist)
+            usage_stats.append(wdist)
+
+    mask = df_output[catcol].values == None
+    df_cat = df_output[mask]
+    if not df_cat.empty:
+        dist, wdist = distribution(df_cat, 'Unidentified', allcu, allen, ancol, 'Nodeh')
+        job_stats.append(dist)
+        usage_stats.append(wdist)
+
+    # Get overall data for all jobs
+    dist, wdist = distribution(df_output, 'Overall', allcu, allen, ancol, 'Nodeh')
+    job_stats.append(dist)
+    usage_stats.append(wdist)
+
+    # Save the output
+    df_usage = pd.DataFrame(usage_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy'])
+    df_usage.sort_values('PercentUse', inplace=True, ascending=False)
+
+    # Software usage plots
+    # Bar plot of software usage
+    df_plot = df_usage[~df_usage['Software'].isin(['Overall','Unidentified'])]
+    plt.figure(figsize=[8,6])
+    sns.barplot(y='Software', x='PercentUse', color='lightseagreen', data=df_plot)
+    sns.despine()
+    plt.xlabel('PercentUse')
+    plt.tight_layout()
+    plt.savefig(f'{args.prefix}_codes_usage.png', dpi=300)
+    plt.clf()
+    # Boxplots for top 15 software by CU use
+    topcodes = df_usage['Software'].head(16).to_list()[1:]
+    df_topcodes = df[df['Software'].isin(topcodes)]
+    plt.figure(figsize=[8,6])
+    sns.boxplot(
+        y="Software",
+        x="Cores",
+        orient='h',
+        color='lightseagreen',
+        order=topcodes,
+        showmeans=True,
+        meanprops={
+            "marker":"o",
+            "markerfacecolor":"white",
+            "markeredgecolor":"black",
+            "markersize":"5"
+            },
+        data=reindex_df(df_topcodes, weight_col='Nodeh')
+        )
+    plt.xlabel('Cores')
+    sns.despine()
+    plt.tight_layout()
+    plt.savefig(f'{args.prefix}_top15_boxplot.png', dpi=300)
+    plt.clf()
