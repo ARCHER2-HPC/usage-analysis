@@ -453,8 +453,8 @@ for output in outputs:
         df_jobs.to_csv(f'{args.prefix}_{output}.csv', index=False, float_format="%.1f")
         df_usage.to_csv(f'{args.prefix}_{output}_weighted.csv', index=False, float_format="%.1f")
     if args.savemd:
-        df_jobs.to_markdown(f'{args.prefix}_{output}.md', index=False, floatfmt="%.1f")
-        df_usage.to_markdown(f'{args.prefix}_{output}_weighted.md', index=False, floatfmt="%.1f")
+        df_jobs.to_markdown(f'{args.prefix}_{output}.md', index=False, floatfmt=".1f")
+        df_usage.to_markdown(f'{args.prefix}_{output}_weighted.md', index=False, floatfmt=".1f")
 
 
 ######################################################################
