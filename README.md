@@ -66,7 +66,7 @@ Options:
  -w              Perform analysis of mean node power draw
 ```
 
-### `scua.py` Usage
+### `scua.py` Usage
 
 ```
 Usage: scua.py [options] input
