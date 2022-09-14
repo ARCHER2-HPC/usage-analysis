@@ -98,3 +98,4 @@ image files:
   weighted by CU usage per job
 - `${prefix}_top15_boxplot.png`: Boxplot representing job size statistics for the top 15
   codes by usage weighted by CU usage per job
+- `${prefix}_node_power_distribution.png`: Histogram of mean node power draw
