@@ -29,7 +29,7 @@ version:
 academic license: Fee Payment
 commercial license: Fee Payment
 
-code type: Finite Element
+code type: StructuredGrid
 
 research area: Structural Engineering
 parallel-model: MPI

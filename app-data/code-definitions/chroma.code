@@ -29,7 +29,7 @@ version:
 academic license: Academic Free
 commercial license: Unknown
 
-code type: Lattice QCD
+code type: StruturedGrid
 
 research area: Particle Physics
 parallel-model: MPI

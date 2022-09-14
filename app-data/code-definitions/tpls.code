@@ -29,7 +29,7 @@ version:          95
 academic license: BSD
 commercial license: BSD
 
-code type: Computational Fluid Dynamics
+code type: StructuredGrid
 
 research area: Engineering
 parallel-model: MPI

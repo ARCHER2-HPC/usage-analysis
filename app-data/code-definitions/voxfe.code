@@ -29,7 +29,7 @@ version:
 academic license: BSD
 commercial license: BSD
 
-code type: Finite Element
+code type: UnstracturedGrid
 
 research area: Medical Science
 parallel-model: MPI

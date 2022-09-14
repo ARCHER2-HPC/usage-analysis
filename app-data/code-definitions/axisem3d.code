@@ -29,7 +29,7 @@ version:          14
 academic license: Open Source (MIT)
 commercial license: Open Source (MIT)
 
-code type: Spectral Element
+code type: SpectralMethods StructuredGrid
 
 research area: Seismology
 parallel-model: MPI

@@ -29,7 +29,7 @@ version:          14
 academic license: MIT
 commercial license: MIT
 
-code type: Mathematics
+code type: DenseLinearAlgebra
 
 research area: Mathematics
 parallel-model: MPI

@@ -29,7 +29,7 @@ version:          95
 academic license: Fee Payment
 commercial license: Fee Payment
 
-code type: Periodic Electronic Structure
+code type: DenseLinearAlgebra
 
 research area: Materials Science
 parallel-model: MPI

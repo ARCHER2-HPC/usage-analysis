@@ -29,6 +29,6 @@ version:
 academic license: GPL
 commercial license: GPL
 
-code type: Finite Element
+code type: UnstructuredGrid
 research area: Structural Engineering
 parallel-model: MPI

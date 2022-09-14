@@ -29,7 +29,7 @@ version:
 academic license: Open Source
 commercial license: Open Source
 
-code type: Lattice Boltzman
+code type: StructuredGrid
 
 research area: Medical Physics
 parallel-model: MPI

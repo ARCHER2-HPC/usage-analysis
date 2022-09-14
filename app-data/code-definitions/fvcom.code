@@ -29,7 +29,7 @@ version:          90
 academic license: Open Source
 commercial license: Open Source
 
-code type: Unstructured Grid
+code type: UnstructuredGrid
 
 research area: Climate/Ocean Modelling
 parallel-model: MPI

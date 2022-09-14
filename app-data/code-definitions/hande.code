@@ -29,7 +29,7 @@ version:          2003
 academic license: Open Source (GLPL v2)
 commercial license: Open Source (GLPL v2)
 
-code type: Monte Carlo
+code type: MonteCarloMethods
 
-research area: Materials Science
+research area: MonteCarlo
 parallel-model: MPI+OpenMP

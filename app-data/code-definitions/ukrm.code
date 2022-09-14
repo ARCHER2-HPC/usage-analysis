@@ -29,7 +29,7 @@ version:
 academic license: GPL
 commercial license: GPL
 
-code type: Quantum Chemistry
+code type: DenseLinearAlgebra
 
 research area: Optical Physics
 parallel-model: MPI

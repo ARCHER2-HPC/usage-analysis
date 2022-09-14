@@ -29,7 +29,7 @@ version:          95
 academic license: GPLv3
 commercial license: GPLv3
 
-code type: R-Matrix
+code type: DenseLinearAlgebra
 
 research area: Atomic Physics
 parallel-model: MPI+OpenMP
