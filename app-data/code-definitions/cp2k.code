@@ -34,7 +34,7 @@
 [code info]
 
 # The name of the code (used in output)
-name: cp2k
+name: CP2K
 
 # Regular expression used to identify executables in apstat output
 regexp: cp2k
