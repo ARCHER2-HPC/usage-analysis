@@ -45,7 +45,7 @@ extra_opts=""
 keep_file=""
 run_python=1
 python_opts=""
-while getopts ":A:E:ghknp:S:u:w" opt; do
+while getopts ":A:E:gchknp:S:u:w" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} --group=${OPTARG}"
