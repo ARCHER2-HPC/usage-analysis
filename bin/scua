@@ -45,7 +45,7 @@ extra_opts=""
 keep_file=""
 run_python=1
 python_opts=""
-while getopts ":A:E:gchknp:S:u:w" opt; do
+while getopts ":A:E:gcmhknp:S:u:w" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} --group=${OPTARG}"
@@ -62,6 +62,7 @@ while getopts ":A:E:gchknp:S:u:w" opt; do
       echo " -n              Do not run Python analysis - just produce data file"
       echo " -g              Produce graphs of usage data (as png)"
       echo " -c              Save tables of data (as csv)"
+      echo " -m              Save tables of data (as markdown)"
       echo " -h              Show this help"
       echo " -p prefix       Prefix for output file names"
       echo " -S date/time    Start date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
@@ -79,6 +80,9 @@ while getopts ":A:E:gchknp:S:u:w" opt; do
       ;;
     c )
       python_opts="${python_opts} --csv"
+      ;;
+    m )
+      python_opts="${python_opts} --md"
       ;;
     p )
       python_opts="${python_opts} --prefix=${OPTARG}"

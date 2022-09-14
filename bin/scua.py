@@ -128,7 +128,8 @@ MAX_POWER = 850    # Maximum per-node power draw to consider (in W)
 parser = argparse.ArgumentParser(description='Compute software usage data from Slurm output.')
 parser.add_argument('filename', type=str, nargs=1, help='Data file containing listing of Slurm jobs')
 parser.add_argument('--plots', dest='makeplots', action='store_true', default=False, help='Produce data plots')
-parser.add_argument('--csv', dest='savecsv', action='store_true', default=False, help='Produce data plots')
+parser.add_argument('--csv', dest='savecsv', action='store_true', default=False, help='Produce data files in CSV')
+parser.add_argument('--md', dest='savemd', action='store_true', default=False, help='Produce data files in MD')
 parser.add_argument('--web', dest='webdata', action='store_true', default=False, help='Produce web data')
 parser.add_argument('--power', dest='analysepower', action='store_true', default=False, help='Produce node power usage distribution')
 parser.add_argument('--motif', dest='analysemotif', action='store_true', default=False, help='Produce algorithmic motif usage distribution')
@@ -451,6 +452,9 @@ for output in outputs:
     if args.savecsv:
         df_jobs.to_csv(f'{args.prefix}_{output}.csv', index=False, float_format="%.1f")
         df_usage.to_csv(f'{args.prefix}_{output}_weighted.csv', index=False, float_format="%.1f")
+    if args.savemd:
+        df_jobs.to_markdown(f'{args.prefix}_{output}.md', index=False, float_format="%.1f")
+        df_usage.to_markdown(f'{args.prefix}_{output}_weighted.md', index=False, float_format="%.1f")
 
 
 ######################################################################
