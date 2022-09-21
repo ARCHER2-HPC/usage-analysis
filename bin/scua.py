@@ -178,7 +178,7 @@ coltype = {
     'State': str,
     'Energy': int,
     'MaxRSS': int,
-    'MeanRSS':, int,
+    'MeanRSS': int,
     'SubJobID': str
 }
 df = pd.read_csv(args.filename[0], names=colid, sep=',', dtype=coltype, engine='python')
