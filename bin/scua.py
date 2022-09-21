@@ -181,9 +181,10 @@ coltype = {
     'MeanRSS': int,
     'SubJobID': str
 }
-df = pd.read_csv(args.filename[0], names=colid, sep=',', dtype=coltype, engine='python')
+df = pd.read_csv(args.filename[0], names=colid, sep=',', engine='python')
 # Count helps with number of jobs
 df['Count'] = 1
+print(df)
 
 # Convert energy to numeric type
 df['Energy'] = pd.to_numeric(df['Energy'], errors='coerce')
