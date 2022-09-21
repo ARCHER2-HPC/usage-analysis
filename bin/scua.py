@@ -176,7 +176,7 @@ coltype = {
     'NTasks': int,
     'Runtime': int,
     'State': str,
-    'Energy':, int,
+    'Energy': int,
     'MaxRSS': int,
     'MeanRSS':, int,
     'SubJobID': str
