@@ -157,7 +157,7 @@ for file in os.listdir(codeConfigDir):
 
 # Read project research areas if required
 areadict = {}
-arealist = []
+areaset = []
 if args.projlist is not None:
     projfile = open(args.projlist, 'r')
     next(projfile)  # Skip header
@@ -166,8 +166,8 @@ if args.projlist is not None:
     areaset = set(areadict.values()) # Unique area names
 
 # Read dataset (usually saved from Slurm)
-colid = ['JobID','ExeName','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS']
-df = pd.read_csv(args.filename[0], names=colid, sep='::', engine='python')
+colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','SubJobID']
+df = pd.read_csv(args.filename[0], names=colid, sep=',', engine='python')
 # Count helps with number of jobs
 df['Count'] = 1
 
@@ -208,9 +208,9 @@ df.loc[df['Cores'] < CPN, 'NodePower'] = df['Cores'] * df['NodePower'] / CPN
 df.replace(np.inf, np.nan, inplace=True)
 df['NodePower'].mask(df['NodePower'].gt(MAX_POWER), inplace=True)
 
-# Split JobID column into JobID and subjob ID
-df['JobID'] = df['JobID'].astype(str)
-df[['JobID','SubJobID']] = df['JobID'].str.split('.', 1, expand=True)
+# Split JobID column into JobID and subjob ID - now done as part of adding usernames
+# df['JobID'] = df['JobID'].astype(str)
+# df[['JobID','SubJobID']] = df['JobID'].str.split('.', 1, expand=True)
 
 # Split Account column into ProjectID and GroupID
 df['JobID'] = df['JobID'].astype(str)
