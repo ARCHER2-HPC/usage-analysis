@@ -13,10 +13,13 @@
 #
 # The data file is the output for Slurm sacct, produced in using a 
 # command such as:
-#   sacct --format JobIDRaw,JobName%30,Account,NNodes,NTasks,ElapsedRaw,State,ConsumedEnergyRaw,MaxRSS,AveRSS -P --delimiter :: \
+#   sacct --format JobIDRaw,JobName%30,User,Account,NNodes,NTasks,ElapsedRaw,State,ConsumedEnergyRaw,MaxRSS,AveRSS -P --delimiter , \
 #        | egrep '[0-9]\.[0-9]' | egrep -v "RUNNING|PENDING|REQUEUED"
 #
 # The egrep extracts all subjobs and then excludes specific job states
+# To get accurate usernames, this output may need to be preprocessed to 
+# combine with other output from sacct. See the "scua" script for an example
+# of how to do this.
 #
 #----------------------------------------------------------------------
 # Copyright 2021, 2022 EPCC, The University of Edinburgh
@@ -63,7 +66,9 @@ def getoverallstats(df, cu, en):
     toten = df['Energy'].sum()
     percenten = 100 * toten / en
     totjobs = df['Count'].sum()
-    return totcu, percentcu, toten, percenten, totjobs
+    totusers = df['User'].nunique()
+    totprojects = df['ProjectID'].nunique()
+    return totcu, percentcu, toten, percenten, totjobs, totusers, totprojects
 
 # Get unweighted distribution
 def getdist(df, col):
@@ -89,11 +94,11 @@ def getweighteddist(df, values, weights):
 # Get distribution statistics
 #     Returns two lists, one with unweighted distribution, one with weighted distribution
 def distribution(df, label, allcu, allen, values, weights):
-    totcu, percentcu, toten, percenten, totjobs = getoverallstats(df, allcu, allen)
+    totcu, percentcu, toten, percenten, totjobs, totusers, totprojects = getoverallstats(df, allcu, allen)
     minval, maxval, q1val, medval, q3val = getdist(df, values)
-    dist = [label, minval, q1val, medval, q3val, maxval, totjobs, totcu, percentcu, toten, percenten]
+    dist = [label, minval, q1val, medval, q3val, maxval, totjobs, totcu, percentcu, toten, percenten, totusers, totprojects]
     wq1val, wmedval, wq3val = getweighteddist(df, values, weights)
-    wdist = [label, minval, wq1val, wmedval, wq3val, maxval, totjobs, totcu, percentcu, toten, percenten]
+    wdist = [label, minval, wq1val, wmedval, wq3val, maxval, totjobs, totcu, percentcu, toten, percenten, totusers, totprojects]
     return dist, wdist
 
 # Get power distribution weighted by CU (nodeh)
@@ -167,21 +172,7 @@ if args.projlist is not None:
 
 # Read dataset (usually saved from Slurm)
 colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','SubJobID']
-coltype = {
-    'JobID': str,
-    'ExeName': str,
-    'User': str,
-    'Account': str,
-    'Nodes': int,
-    'NTasks': int,
-    'Runtime': int,
-    'State': str,
-    'Energy': int,
-    'MaxRSS': int,
-    'MeanRSS': int,
-    'SubJobID': str
-}
-df = pd.read_csv(args.filename[0], names=colid, sep=',', engine='python')
+df = pd.read_csv(args.filename[0], names=colid, sep=',', engine='python', header=0)
 # Count helps with number of jobs
 df['Count'] = 1
 print(df)
@@ -448,7 +439,7 @@ for output in outputs:
 
     # Save the output
     print(f'\n## {title[output]} distribution: weighted by usage\n')
-    df_usage = pd.DataFrame(usage_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy'])
+    df_usage = pd.DataFrame(usage_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy', 'Users', 'Projects'])
     if args.webdata:
         df_usage.drop('Nodeh', axis=1, inplace=True)
         df_usage.drop('kWh', axis=1, inplace=True)
@@ -456,7 +447,7 @@ for output in outputs:
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
     print()
     print(f'\n## {title[output]} distribution: by number of jobs\n')
-    df_jobs = pd.DataFrame(job_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy'])
+    df_jobs = pd.DataFrame(job_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy', 'Users', 'Projects'])
     if args.webdata:
         df_jobs.drop('Nodeh', axis=1, inplace=True)
         df_jobs.drop('kWh', axis=1, inplace=True)
@@ -506,7 +497,7 @@ if args.makeplots:
     usage_stats.append(wdist)
 
     # Save the output
-    df_usage = pd.DataFrame(usage_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy'])
+    df_usage = pd.DataFrame(usage_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy', 'Users', 'Projects'])
     df_usage.sort_values('PercentUse', inplace=True, ascending=False)
 
     # Software usage plots
