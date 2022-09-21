@@ -32,11 +32,13 @@
 #
 
 # Paths to Python utilities
-SCUA_PYTHON="scua.py"
+SCUA_PYTHON="${SCUA_BASE}/bin/scua.py"
+SCUA_USERADD="${SCUA_BASE}/bin/add_userid.py"
 # Use :: as the delimiter to avoid issues with commas in job names
 SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,User,Account,NNodes,NTasks,ElapsedRaw,State,ConsumedEnergyRaw,MaxRSS,AveRSS -P --delimiter ::"
 SACCT_USER_BASE_OPTS="-X --format JobIDRaw,User -P --delimiter ,"
 SACCT_OUTPUT_FILE="scua_sacct.dat"
+SACCT_USER_FILE="scua_sacct_users.dat"
 SACCT_EXCLUDE_STATES="RUNNING|PENDING|REQUEUED|FAILED"
 
 # Get command line options
@@ -124,9 +126,11 @@ SACCT_OUTPUT_FILE="${prefix}_sacct.dat"
 extra_opts="${extra_opts} -a"
 sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '^[0-9]+\.[0-9]' | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_OUTPUT_FILE}
 # Run to get the user ID associated with the jobs
-sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_USER_BASE_OPTS} | egrep -v "${SACCT_EXCLUDE_STATES}" > users_sacct.dat
+sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_USER_BASE_OPTS} | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_USER_FILE}
 
 # Here we need to merge the job step data with the username information
+echo "Running: ${SCUA_USERADD} ${SACCT_OUTPUT_FILE} ${SACCT_USER_FILE} ${SACCT_OUTPUT_FILE}"
+${SCUA_USERADD} ${SACCT_OUTPUT_FILE} ${SACCT_USER_FILE} ${SACCT_OUTPUT_FILE}
 
 if [ -z ${run_python} ]
 then
