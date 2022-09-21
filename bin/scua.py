@@ -167,7 +167,21 @@ if args.projlist is not None:
 
 # Read dataset (usually saved from Slurm)
 colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','SubJobID']
-df = pd.read_csv(args.filename[0], names=colid, sep=',', engine='python')
+coltype = {
+    'JobID': str,
+    'ExeName': str,
+    'User': str,
+    'Account': str,
+    'Nodes': int,
+    'NTasks': int,
+    'Runtime': int,
+    'State': str,
+    'Energy':, int,
+    'MaxRSS': int,
+    'MeanRSS':, int,
+    'SubJobID': str
+}
+df = pd.read_csv(args.filename[0], names=colid, sep=',', dtype=coltype, engine='python')
 # Count helps with number of jobs
 df['Count'] = 1
 
