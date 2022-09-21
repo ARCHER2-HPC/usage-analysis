@@ -175,7 +175,6 @@ colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','
 df = pd.read_csv(args.filename[0], names=colid, sep=',', engine='python', header=0)
 # Count helps with number of jobs
 df['Count'] = 1
-print(df)
 
 # Convert energy to numeric type
 df['Energy'] = pd.to_numeric(df['Energy'], errors='coerce')
