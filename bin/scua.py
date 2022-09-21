@@ -181,7 +181,7 @@ coltype = {
     'MeanRSS': int,
     'SubJobID': str
 }
-df = pd.read_csv(args.filename[0], names=colid, sep=',', engine='python')
+df = pd.read_csv(args.filename[0], names=colid, sep=',', engine='python', header=0)
 # Count helps with number of jobs
 df['Count'] = 1
 print(df)
