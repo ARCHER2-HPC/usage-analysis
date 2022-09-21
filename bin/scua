@@ -63,7 +63,7 @@ while getopts ":a:A:E:gcmhknp:S:tu:w" opt; do
       echo " -a account_csv  Perform analysis by research area. account_csv is a CSV file with a mapping of account codes to research areas"
       echo " -A account      Limit to specified account code, e.g. z01"
       echo " -E date/time    End date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
-      echo " -k              Keeps the intermediate output from sacct in <prefix>_sacct.dat"
+      echo " -k              Keeps the intermediate output from sacct in <prefix>_sacct.dat and <prefix>_sacct_users.dat"
       echo " -n              Do not run Python analysis - just produce data file"
       echo " -g              Produce graphs of usage data (as png)"
       echo " -c              Save tables of data (as csv)"
@@ -123,6 +123,7 @@ done
 shift $((OPTIND -1))
 
 SACCT_OUTPUT_FILE="${prefix}_sacct.dat"
+SACCT_USER_FILE="${prefix}_sacct_users.dat"
 extra_opts="${extra_opts} -a"
 sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '^[0-9]+\.[0-9]' | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_OUTPUT_FILE}
 # Run to get the user ID associated with the jobs
@@ -149,7 +150,7 @@ fi
 
 if [ -z "$keep_file" ] 
 then
-   rm ${SACCT_OUTPUT_FILE}
+   rm ${SACCT_OUTPUT_FILE} ${SACCT_USER_FILE}
 fi
 exit 0
 
