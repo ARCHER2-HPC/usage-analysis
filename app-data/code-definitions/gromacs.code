@@ -23,7 +23,7 @@ name: GROMACS
 regexp: mdrun|gmx
 
 [metadata]
-primary language: C
+primary language: C++
 version:         
 
 academic license: Open Source
