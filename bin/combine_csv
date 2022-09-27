@@ -37,10 +37,12 @@ df = pd.concat(map(pd.read_csv, joined_list), ignore_index=True)
 df.set_index(mycol, inplace=True)
 
 # Aggregate by specified column
-grouped = df.groupby(mycol)[['kWh', 'Nodeh']].sum()
+grouped = df.groupby(mycol)[['kWh', 'Nodeh', 'Users', 'Projects']].sum()
 # Compute totals
 allcu = grouped.at['Overall', 'Nodeh']
 allen = grouped.at['Overall', 'kWh']
+alluser = grouped.at['Overall', 'Users']
+allproject = grouped.at['Overall', 'Projects']
 # Add percent columns
 grouped['PercentEnergy'] = 100.0 * grouped['kWh'] / allen
 grouped['PercentUse'] = 100.0 * grouped['Nodeh'] / allcu
