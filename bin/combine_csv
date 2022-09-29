@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ######################################################
 # combine_csv
 #   Helper script to combine multiple CSV files into 
@@ -36,13 +35,32 @@ joined_list = glob.glob(joined_files)
 df = pd.concat(map(pd.read_csv, joined_list), ignore_index=True)
 df.set_index(mycol, inplace=True)
 
-# Aggregate by specified column
-grouped = df.groupby(mycol)[['kWh', 'Nodeh', 'Users', 'Projects']].sum()
+# Aggregate by specified columns
+#    Simply totalling the number of users/projects does not make sense (as there will be
+#    a large amount of overcounting so we get the minimum and maximum from the periods
+#    that we combine
+aggs_dict = {
+    'kWh':'sum',
+    'Nodeh':'sum',
+    'Users':['min','max'],
+    'Projects':['min','max'],
+}
+grouped = df.groupby(mycol).agg(aggs_dict)
+# Reset the column headers to useful names
+grouped.columns = grouped.columns.to_flat_index()
+cols = [
+        'kWh', 
+        'Nodeh',
+        'Users_min',
+        'Users_max',
+        'Projects_min',
+        'Projects_max'
+       ]
+grouped.columns = cols
+
 # Compute totals
 allcu = grouped.at['Overall', 'Nodeh']
 allen = grouped.at['Overall', 'kWh']
-alluser = grouped.at['Overall', 'Users']
-allproject = grouped.at['Overall', 'Projects']
 # Add percent columns
 grouped['PercentEnergy'] = 100.0 * grouped['kWh'] / allen
 grouped['PercentUse'] = 100.0 * grouped['Nodeh'] / allcu
