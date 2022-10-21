@@ -328,7 +328,7 @@ print('\n## Node power data quality check\n')
 print(f'{"Number of subjobs =":>30s} {nRow:>10d}')
 print(f'{"Subjobs excluded =":>30s} {nsmall:>10d} ({100*nsmall/nRow:.2f}%)')
 print(f'{"Usage excluded =":>30s} {coresusage:>10.1f} Nodeh ({100*coresusage/allcu:.2f}%)')
-print(f'{"Energy excluded =":>30s} {energyusage:>10.1f} Nodeh ({100*energyusage/allen:.2f}%)\n')
+print(f'{"Energy excluded =":>30s} {energyusage:>10.1f} kWh ({100*energyusage/allen:.2f}%)\n')
 
 ######################################################################
 # Define the distribution analyses to perform
