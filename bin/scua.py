@@ -132,6 +132,8 @@ MAX_POWER = 850    # Maximum per-node power draw to consider (in W)
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='Compute software usage data from Slurm output.')
 parser.add_argument('filename', type=str, nargs=1, help='Data file containing listing of Slurm jobs')
+parser.add_argument('--usersplit', dest='usersplit', action='store_true', default=False, help='Split unknown use by user')
+parser.add_argument('--anon', dest='anon', action='store_false', default=True, help='If splitting unknown use by user, anonymise usernames')
 parser.add_argument('--plots', dest='makeplots', action='store_true', default=False, help='Produce data plots')
 parser.add_argument('--csv', dest='savecsv', action='store_true', default=False, help='Produce data files in CSV')
 parser.add_argument('--md', dest='savemd', action='store_true', default=False, help='Produce data files in MD')
@@ -236,6 +238,14 @@ df['Motif'].str.split().apply(motif_set.update)
 if args.projlist is not None:
     df['Area'] = df['ProjectID'].map(areadict)
 
+# Set up anonymous user identifiers
+userlist = df['User'].unique()
+anonid = [f"user{i}" for i in range(len(userlist))]
+zipobj = zip(userlist, anonid)
+# Create a dictionary from zip object
+anonuid_dict = dict(zipobj)
+df['AnonUser'] = df['User'].map(anonuid_dict)
+
 # Restrict to specified project code if requested
 if args.account:
     df.drop(df[df.ProjectID != args.account].index, inplace=True)
@@ -288,7 +298,16 @@ if not args.account is None and args.account != "":
 if args.dropnan:
     print("Dropping job steps with no energy values recorded\n");
 
-
+######################################################################
+# Split out data in Python and a.out sections by user (if required)
+#
+if args.usersplit:
+    if args.anon:
+        df.loc[df['Software'] == 'a.out', 'Software'] = df['Software'] + "_" + df['AnonUser']
+        df.loc[df['Software'] == 'Python', 'Software'] = df['Software'] + "_" + df['AnonUser']
+    else:
+        df.loc[df['Software'] == 'a.out', 'Software'] = df['Software'] + "_" + df['User']
+        df.loc[df['Software'] == 'Python', 'Software'] = df['Software'] + "_" + df['User']
 
 ######################################################################
 # Data quality checks
@@ -307,6 +326,23 @@ thresh = allcu * 0.01
 print('\n## Unidentified executables with significant use\n')
 print(df_group.loc[df_group['Nodeh'] >= thresh].to_markdown(floatfmt=".1f"))
 print()
+
+if args.usersplit:
+    # Make sure we gather data on these executables, broken down by user
+    df_group.reset_index()
+    unidentified_exe = df_group.loc[df_group['Nodeh'] >= thresh].index.to_list()
+    # We loop over the identified executables and append the anonymised username
+    if args.anon:
+        for exe in unidentified_exe:
+            df.loc[df['ExeName'] == exe, 'Software'] = exe
+            df.loc[df['ExeName'] == exe, 'Software'] = df['Software'] + "_" + df['AnonUser']
+    else:
+        for exe in unidentified_exe:
+            df.loc[df['ExeName'] == exe, 'Software'] = exe
+            df.loc[df['ExeName'] == exe, 'Software'] = df['Software'] + "_" + df['User']
+
+
+
 
 # Check quality of energy data
 #
@@ -329,6 +365,13 @@ print(f'{"Number of subjobs =":>30s} {nRow:>10d}')
 print(f'{"Subjobs excluded =":>30s} {nsmall:>10d} ({100*nsmall/nRow:.2f}%)')
 print(f'{"Usage excluded =":>30s} {coresusage:>10.1f} Nodeh ({100*coresusage/allcu:.2f}%)')
 print(f'{"Energy excluded =":>30s} {energyusage:>10.1f} kWh ({100*energyusage/allen:.2f}%)\n')
+
+######################################################################
+# Get the final list of software in the dataframe
+#
+# Get the list of codes from the software column and remove "None"
+codelist = df['Software'].unique()
+codelist = list(filter(lambda item: item is not None, codelist))
 
 ######################################################################
 # Define the distribution analyses to perform

@@ -49,7 +49,7 @@ keep_file=""
 run_python=1
 python_opts=""
 prefix="scua"
-while getopts ":a:A:E:gcmhknp:S:tu:w" opt; do
+while getopts ":a:A:E:gcmhknp:sS:tu:w" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} --group=${OPTARG}"
@@ -70,6 +70,7 @@ while getopts ":a:A:E:gcmhknp:S:tu:w" opt; do
       echo " -m              Save tables of data (as markdown)"
       echo " -h              Show this help"
       echo " -p prefix       Prefix for output file names. Default prefix is 'scua'"
+      echo " -s              Split unknown, Python and a.out use by user"
       echo " -S date/time    Start date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
       echo " -t              Perform analysis by computational motif"
       echo " -u user         Limit to specific user"
@@ -97,6 +98,9 @@ while getopts ":a:A:E:gcmhknp:S:tu:w" opt; do
     p )
       python_opts="${python_opts} --prefix=${OPTARG}"
       prefix=${OPTARG}
+      ;;
+    s )
+      python_opts="${python_opts} --usersplit"
       ;;
     S )
       startdate="-S ${OPTARG}"
