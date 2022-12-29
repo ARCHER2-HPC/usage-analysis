@@ -132,7 +132,7 @@ shift $((OPTIND -1))
 SACCT_OUTPUT_FILE="${prefix}_sacct.dat"
 SACCT_USER_FILE="${prefix}_sacct_users.dat"
 extra_opts="${extra_opts} -a"
-echo 'Running: sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep "^[0-9]+\.[0-9]"" | egrep -v "${SACCT_EXCLUDE_STATES}"'
+echo "Running: sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep \"^[0-9]+\.[0-9]\" | egrep -v \"${SACCT_EXCLUDE_STATES}\""
 sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_BASE_OPTS} | egrep '^[0-9]+\.[0-9]' | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_OUTPUT_FILE}
 # Run to get the user ID associated with the jobs
 sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_USER_BASE_OPTS} | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_USER_FILE}
