@@ -35,7 +35,7 @@
 SCUA_PYTHON="${SCUA_BASE}/bin/scua.py"
 SCUA_USERADD="${SCUA_BASE}/bin/add_userid.py"
 # Use :: as the delimiter to avoid issues with commas in job names
-SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,User,Account,NNodes,NTasks,ElapsedRaw,State,ConsumedEnergyRaw,MaxRSS,AveRSS -P --delimiter ::"
+SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,User,Account,NNodes,NTasks,ElapsedRaw,State,ConsumedEnergyRaw,MaxRSS,AveRSS,ReqCPUFreq -P --delimiter ::"
 SACCT_USER_BASE_OPTS="-X --format JobIDRaw,User -P --delimiter ,"
 SACCT_OUTPUT_FILE="scua_sacct.dat"
 SACCT_USER_FILE="scua_sacct_users.dat"

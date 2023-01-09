@@ -31,7 +31,7 @@ import pandas as pd
 import sys
 import csv
 
-colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS']
+colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','CPUFreq']
 df = pd.read_csv(sys.argv[1], names=colid, sep='::', engine='python')
 
 df['JobID'] = df['JobID'].astype(str)

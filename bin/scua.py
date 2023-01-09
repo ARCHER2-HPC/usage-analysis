@@ -173,7 +173,7 @@ if args.projlist is not None:
     areaset = set(areadict.values()) # Unique area names
 
 # Read dataset (usually saved from Slurm)
-colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','SubJobID']
+colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','CPUFreq','SubJobID']
 df = pd.read_csv(args.filename[0], names=colid, sep=',', engine='python', header=0)
 # Count helps with number of jobs
 df['Count'] = 1
