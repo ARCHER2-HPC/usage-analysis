@@ -83,7 +83,7 @@ the `-c` option, it will save the same tables as CSV files and if you specify th
 it will save the same tables as markdown files. All files will be prefixed with the specified
 prefix or `scua` if no prefix is supplied.
 
-If you specify the `-g` option (to produce graphs) you will also obtain three additional
+If you specify the `-g` option (to produce graphs) you will also obtain additional
 image files:
 
 - `${prefix}_codes_usage.png`: Bar chart of CU usage broken down by code
@@ -91,4 +91,3 @@ image files:
   weighted by CU usage per job
 - `${prefix}_top15_boxplot.png`: Boxplot representing job size statistics for the top 15
   codes by usage weighted by CU usage per job
-- `${prefix}_node_power_distribution.png`: Histogram of mean node power draw
