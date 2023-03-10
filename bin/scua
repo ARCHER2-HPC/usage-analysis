@@ -39,7 +39,7 @@ SACCT_BASE_OPTS="--format JobIDRaw,JobName%30,User,Account,NNodes,NTasks,Elapsed
 SACCT_USER_BASE_OPTS="-X --format JobIDRaw,User -P --delimiter ,"
 SACCT_OUTPUT_FILE="scua_sacct.dat"
 SACCT_USER_FILE="scua_sacct_users.dat"
-SACCT_EXCLUDE_STATES="RUNNING|PENDING|REQUEUED|FAILED"
+SACCT_EXCLUDE_STATES="RUNNING|PENDING|REQUEUED"
 
 # Get command line options
 startdate=""
