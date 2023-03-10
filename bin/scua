@@ -49,7 +49,7 @@ keep_file=""
 run_python=1
 python_opts=""
 prefix="scua"
-while getopts ":a:A:E:gcmhknp:sS:tu:wx:" opt; do
+while getopts ":a:A:E:fgcmhknp:sS:tu:wx:" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} --group=${OPTARG}"
@@ -63,6 +63,7 @@ while getopts ":a:A:E:gcmhknp:sS:tu:wx:" opt; do
       echo " -a account_csv  Perform analysis by research area. account_csv is a CSV file with a mapping of account codes to research areas"
       echo " -A account      Limit to specified account code, e.g. z01"
       echo " -E date/time    End date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
+      echo " -f              Perform analysis of CPU frequency use"
       echo " -k              Keeps the intermediate output from sacct in <prefix>_sacct.dat and <prefix>_sacct_users.dat"
       echo " -n              Do not run Python analysis - just produce data file"
       echo " -g              Produce graphs of usage data (as png)"
@@ -85,6 +86,9 @@ while getopts ":a:A:E:gcmhknp:sS:tu:wx:" opt; do
       ;;
     n )
       run_python=""
+      ;;
+    f )
+      python_opts="${python_opts} --cpufreq"
       ;;
     g )
       python_opts="${python_opts} --plots"

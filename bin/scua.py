@@ -140,6 +140,7 @@ parser.add_argument('--md', dest='savemd', action='store_true', default=False, h
 parser.add_argument('--web', dest='webdata', action='store_true', default=False, help='Produce web data')
 parser.add_argument('--power', dest='analysepower', action='store_true', default=False, help='Produce node power usage distribution')
 parser.add_argument('--motif', dest='analysemotif', action='store_true', default=False, help='Produce algorithmic motif usage distribution')
+parser.add_argument('--cpufreq', dest='analysecpufreq', action='store_true', default=False, help='Produce CPU frequency usage distribution')
 parser.add_argument('--dropnan', dest='dropnan', action='store_true', default=False, help='Drop all rows that contain NaN. Useful for strict comparisons between usage and energy use.')
 parser.add_argument('--prefix', dest='prefix', type=str, action='store', default='scua', help='Set the prefix to be used for output files')
 parser.add_argument('--projects', dest='projlist', type=str, action='store', default=None, help='The file containing a list of project IDs and associated research areas')
@@ -177,6 +178,10 @@ colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','
 df = pd.read_csv(args.filename[0], names=colid, sep=',', engine='python', header=0)
 # Count helps with number of jobs
 df['Count'] = 1
+
+# Get the list of CPUFreq from the column (get unique words in the column)
+cpufreq_set = set()
+cpufreq_set = df['CPUFreq'].unique()
 
 # Convert energy to numeric type
 df['Energy'] = pd.to_numeric(df['Energy'], errors='coerce')
@@ -439,6 +444,24 @@ if args.analysemotif and args.analysepower:
     analysis_col[category] = 'NodePower'
     analyse_none[category] = False
     full_node[category] = True
+if args.analysecpufreq:
+    category = 'CPUFreqSize'
+    title[category] = 'CPU frequency job size'
+    outputs.append(category)
+    category_list[category] = cpufreq_set
+    category_col[category] = 'CPUFreq'
+    analysis_col[category] = 'Cores'
+    analyse_none[category] = True
+    full_node[category] = False
+if args.analysecpufreq and args.analysepower:
+    category = 'CPUFreqPower'
+    title[category] = 'CPU frequency node power use'
+    outputs.append(category)
+    category_list[category] = cpufreq_set
+    category_col[category] = 'CPUFreq'
+    analysis_col[category] = 'NodePower'
+    analyse_none[category] = True
+    full_node[category] = True
 
 ######################################################################
 # Loop over the defined output categories computing distributions
@@ -458,7 +481,7 @@ for output in outputs:
     catcol = category_col[output]
     ancol = analysis_col[output]
     for category in categories:
-        mask = df_output[catcol].str.contains(re.escape(category), na=False)
+        mask = df_output[catcol].str.contains(re.escape(str(category)), na=False)
         df_cat = df_output[mask]
         if not df_cat.empty:
             dist, wdist = distribution(df_cat, category, allcu, allen, ancol, 'Nodeh')
