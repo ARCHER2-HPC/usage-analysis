@@ -256,40 +256,6 @@ if args.account:
     df.drop(df[df.ProjectID != args.account].index, inplace=True)
     print(df)
 
-# Plots that only depend on full dataframe
-if args.makeplots:
-    # Overall boxplot of sizes in cores weighted by usage
-    plt.figure(figsize=[6,2])
-    sns.boxplot(
-        x="Cores",
-        orient='h',
-        color='lightseagreen',
-        showmeans=True,
-        width=0.25,
-        meanprops={
-            "marker":"o",
-            "markerfacecolor":"white",
-            "markeredgecolor":"black",
-            "markersize":"5"
-            },
-        data=reindex_df(df, weight_col='Nodeh')
-        )
-    plt.xlabel('Cores')
-    sns.despine()
-    plt.tight_layout()
-    plt.savefig(f'{args.prefix}_overall_boxplot.png', dpi=300)
-    plt.clf()
-    
-    # Histogram of node power use distribution
-    dfnan = df.dropna()
-    plt.figure(figsize=[8,6])
-    dfnan["NodePower"].plot(kind="hist", weights=dfnan["Energy"], bins=20)
-    plt.xlabel('Node Power / W')
-    plt.ylabel('Energy / kWh')
-    sns.despine()
-    plt.tight_layout()
-    plt.savefig(f'{args.prefix}_node_power_distribution.png', dpi=300)
-
 print("\n----------------------------------")
 print("# SCUA (Slurm Code Usage Analysis)")
 print()
