@@ -1,0 +1,167 @@
+#!/bin/bash
+
+# Slurm Code Energy Analysis (scea)
+#
+# Usage:
+#    scea [options]
+# 
+# Analyse code energy usage from Slurm. Relies on the scea.py 
+# program to do the analysis. This wrapper script runs the
+# correct sacct command to extract the data from Slurm and
+# passes it to scea.py. If you already have the data, you
+# can use the scea.py program directly.
+#
+#----------------------------------------------------------------------
+# Copyright 2021-2023 EPCC, The University of Edinburgh
+#
+# This file is part of usage-analysis.
+#
+# usage-analysis is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# usage-analysis is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with usage-analysis.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
+#
+
+# Paths to Python utilities
+SCEA_PYTHON="${SCUA_BASE}/bin/scea.py"
+SCEA_STEPADD="${SCUA_BASE}/bin/add_step.py"
+# Use :: as the delimiter to avoid issues with commas in job names
+SACCT_BASE_OPTS="-X --format=JobIDRaw,JobName%30,User,Account,NNodes,ElapsedRaw,State,ConsumedEnergyRaw -P --delimiter=::"
+SACCT_PARTITIONS="--partition=standard,highmem"
+SACCT_STEP_BASE_OPTS="--format=JobIDRaw,JobName%30 -P --delimiter ,"
+SACCT_OUTPUT_FILE="scea_sacct.dat"
+SACCT_STEP_FILE="scea_sacct_step.dat"
+SACCT_EXCLUDE_STATES="RUNNING|PENDING|REQUEUED"
+
+# Get command line options
+startdate=""
+enddate=""
+extra_opts=""
+keep_file=""
+run_python=1
+python_opts=""
+prefix="scea"
+while getopts ":a:A:E:fgcmhknp:sS:tu:wx:" opt; do
+  case ${opt} in
+    A )
+      extra_opts="${extra_opts} --group=${OPTARG}"
+      ;;
+    E )
+      enddate="-E ${OPTARG}"
+      ;;
+    h )
+      echo "Usage: scea [options]"
+      echo "Options:"
+      echo " -a account_csv        Perform analysis by research area. account_csv is a CSV file with a mapping of account codes to research areas"
+      echo " -A account            Limit to specified account code, e.g. z01"
+      echo " -E date/time          End date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
+      echo " -k                    Keeps the intermediate output from sacct in <prefix>_sacct.dat and <prefix>_sacct_users.dat"
+      echo " -n                    Do not run Python analysis - just produce data file"
+      echo " -g                    Produce graphs of usage data (as png)"
+      echo " -c                    Save tables of data (as csv)"
+      echo " -m                    Save tables of data (as markdown)"
+      echo " -h                    Show this help"
+      echo " -p prefix             Prefix for output file names. Default prefix is 'scea'"
+      echo " -s                    Split unknown, Python and a.out use by user"
+      echo " -S date/time          Start date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
+      echo " -t                    Perform analysis by computational motif"
+      echo " -u user               Limit to specific user"
+      echo " -w                    Perform analysis of mean node power draw"
+      echo " -x STATE1|STATE2|...  Specify Slurm job states to exlude from the analysis. Default is ${SACCT_EXCLUDE_STATES}
+      exit 0
+      ;;
+    a )
+      python_opts="${python_opts} --projects=${OPTARG}"
+      ;;
+    k )
+      keep_file=1
+      ;;
+    n )
+      run_python=""
+      ;;
+    g )
+      python_opts="${python_opts} --plots"
+      ;;
+    c )
+      python_opts="${python_opts} --csv"
+      ;;
+    m )
+      python_opts="${python_opts} --md"
+      ;;
+    p )
+      python_opts="${python_opts} --prefix=${OPTARG}"
+      prefix=${OPTARG}
+      ;;
+    s )
+      python_opts="${python_opts} --usersplit"
+      ;;
+    S )
+      startdate="-S ${OPTARG}"
+      ;;
+    t )
+      python_opts="${python_opts} --motif"
+      ;;
+    u )
+      extra_opts="${extra_opts} -u ${OPTARG}"
+      ;;
+    w )
+      python_opts="${python_opts} --power"
+      ;;
+    x )
+      SACCT_EXCLUDE_STATES="${OPTARG}"
+      ;;
+    \? )
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+     : )
+      echo "Invalid Option: -$OPTARG requires an argument" 1>&2
+      exit 1
+      ;;
+  esac
+done
+shift $((OPTIND -1))
+
+SACCT_OUTPUT_FILE="${prefix}_sacct.dat"
+SACCT_STEP_FILE="${prefix}_sacct_step.dat"
+extra_opts="${extra_opts} -a -n"
+echo "Running: sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_PARTITIONS} ${SACCT_BASE_OPTS} | egrep -v \"${SACCT_EXCLUDE_STATES}\""
+sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_PARTITIONS} ${SACCT_BASE_OPTS} | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_OUTPUT_FILE}
+# Run to get the first job step associated with the jobs
+echo "Running: sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_PARTITIONS} ${SACCT_STEP_BASE_OPTS} | egrep \"\\.0\" | egrep -v \"${SACCT_EXCLUDE_STATES}\""
+sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_PARTITIONS} ${SACCT_STEP_BASE_OPTS} | egrep "\.0" | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_STEP_FILE}
+
+# Here we need to merge the job step data with the executable information taken from the first srun job step in the job
+echo "Running: ${SCEA_STEPADD} ${SACCT_OUTPUT_FILE} ${SACCT_STEP_FILE} ${SACCT_OUTPUT_FILE}"
+${SCEA_STEPADD} ${SACCT_OUTPUT_FILE} ${SACCT_STEP_FILE} ${SACCT_OUTPUT_FILE}
+
+if [ -z ${run_python} ]
+then
+  exit 0
+fi
+
+if [ -s ${SACCT_OUTPUT_FILE} ]
+then
+   # We have some data, lets process it using the Python program
+   echo "Running: ${SCEA_PYTHON} ${python_opts} ${SACCT_OUTPUT_FILE}"
+   ${SCEA_PYTHON} ${python_opts} ${SACCT_OUTPUT_FILE}
+else
+   # No data, just stop
+   echo "No jobs found"
+fi
+
+if [ -z "$keep_file" ] 
+then
+   rm ${SACCT_OUTPUT_FILE} ${SACCT_USER_FILE}
+fi
+exit 0
+
