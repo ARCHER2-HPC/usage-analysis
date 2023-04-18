@@ -76,7 +76,7 @@ while getopts ":a:A:E:fgcmhknp:sS:tu:wx:" opt; do
       echo " -t                    Perform analysis by computational motif"
       echo " -u user               Limit to specific user"
       echo " -w                    Perform analysis of mean node power draw"
-      echo " -x STATE1|STATE2|...  Specify Slurm job states to exlude from the analysis. Default is ${SACCT_EXCLUDE_STATES}
+      echo " -x STATE1|STATE2|...  Specify Slurm job states to exlude from the analysis. Default is ${SACCT_EXCLUDE_STATES}"
       exit 0
       ;;
     a )
