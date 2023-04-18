@@ -276,8 +276,8 @@ nNaN = df['Energy'].isna().sum()
 NaNUsage = df.loc[df['Energy'].isna(), 'Nodeh'].sum()
 nRow = df.shape[0]
 print('\n## Energy data quality check\n')
-print(f'{"Number of subjobs =":>30s} {nRow:>10d}')
-print(f'{"Subjobs missing energy =":>30s} {nNaN:>10d} ({100*nNaN/nRow:.2f}%)')
+print(f'{"Number of jobs =":>30s} {nRow:>10d}')
+print(f'{"Jobs missing energy =":>30s} {nNaN:>10d} ({100*nNaN/nRow:.2f}%)')
 print(f'{"Usage missing energy =":>30s} {NaNUsage:>10.1f} Nodeh ({100*NaNUsage/allcu:.2f}%)\n')
 
 # Check quality of node power data
