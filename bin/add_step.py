@@ -31,11 +31,8 @@ import pandas as pd
 import sys
 import csv
 
-colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','CPUFreq']
+colid = ['JobID','ExeName','User','Account','Nodes','Runtime','State','Energy']
 df = pd.read_csv(sys.argv[1], names=colid, sep='::', engine='python')
-
-# df['JobID'] = df['JobID'].astype(str)
-# df[['JobID','SubJobID']] = df['JobID'].str.split('.', 1, expand=True)
 
 # Read steps associated with jobs
 stepdict = {}
