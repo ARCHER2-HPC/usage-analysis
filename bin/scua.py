@@ -101,18 +101,6 @@ def distribution(df, label, allcu, allen, values, weights):
     wdist = [label, minval, wq1val, wmedval, wq3val, maxval, totjobs, totcu, percentcu, toten, percenten, totusers, totprojects]
     return dist, wdist
 
-# Get power distribution weighted by CU (nodeh)
-def getweighteddist_power(df):
-    df.sort_values('NodePower', inplace=True)
-    cumsum = df.Nodeh.cumsum()
-    cutoff = df.Nodeh.sum() * 0.5
-    meduse = float(df.NodePower[cumsum >= cutoff].iloc[0])
-    cutoff = df.Nodeh.sum() * 0.25
-    q1use = float(df.NodePower[cumsum >= cutoff].iloc[0])
-    cutoff = df.Nodeh.sum() * 0.75
-    q3use = float(df.NodePower[cumsum >= cutoff].iloc[0])
-    return meduse, q1use, q3use
-
 # Compute version of dataframe weighted by use
 def reindex_df(df, weight_col):
     """expand the dataframe to prepare for resampling
@@ -137,8 +125,8 @@ parser.add_argument('--anon', dest='anon', action='store_false', default=True, h
 parser.add_argument('--plots', dest='makeplots', action='store_true', default=False, help='Produce data plots')
 parser.add_argument('--csv', dest='savecsv', action='store_true', default=False, help='Produce data files in CSV')
 parser.add_argument('--md', dest='savemd', action='store_true', default=False, help='Produce data files in MD')
-parser.add_argument('--web', dest='webdata', action='store_true', default=False, help='Produce web data')
 parser.add_argument('--power', dest='analysepower', action='store_true', default=False, help='Produce node power usage distribution')
+parser.add_argument('--energy', dest='reportenergy', action='store_true', default=False, help='Report enery use in output. Note this is known to be inaccurate when just job steps are considered - consider using the scea tool instead to report energy use from jobs.')
 parser.add_argument('--motif', dest='analysemotif', action='store_true', default=False, help='Produce algorithmic motif usage distribution')
 parser.add_argument('--cpufreq', dest='analysecpufreq', action='store_true', default=False, help='Produce CPU frequency usage distribution')
 parser.add_argument('--dropnan', dest='dropnan', action='store_true', default=False, help='Drop all rows that contain NaN. Useful for strict comparisons between usage and energy use.')
@@ -219,10 +207,6 @@ df.loc[df['Cores'] < CPN, 'NodePower'] = df['Cores'] * df['NodePower'] / CPN
 # Remove very unrealistic values (presumably due to counter errors or very short runtimes)
 df.replace(np.inf, np.nan, inplace=True)
 df['NodePower'].mask(df['NodePower'].gt(MAX_POWER), inplace=True)
-
-# Split JobID column into JobID and subjob ID - now done as part of adding usernames
-# df['JobID'] = df['JobID'].astype(str)
-# df[['JobID','SubJobID']] = df['JobID'].str.split('.', 1, expand=True)
 
 # Split Account column into ProjectID and GroupID
 df['JobID'] = df['JobID'].astype(str)
@@ -471,17 +455,17 @@ for output in outputs:
     # Save the output
     print(f'\n## {title[output]} distribution: weighted by usage\n')
     df_usage = pd.DataFrame(usage_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy', 'Users', 'Projects'])
-    if args.webdata:
-        df_usage.drop('Nodeh', axis=1, inplace=True)
+    if not args.reportenergy:
         df_usage.drop('kWh', axis=1, inplace=True)
+        df_usage.drop('PercentEnergy', axis=1, inplace=True)
     df_usage.sort_values('PercentUse', inplace=True, ascending=False)
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
     print()
     print(f'\n## {title[output]} distribution: by number of jobs\n')
     df_jobs = pd.DataFrame(job_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy', 'Users', 'Projects'])
-    if args.webdata:
-        df_jobs.drop('Nodeh', axis=1, inplace=True)
-        df_jobs.drop('kWh', axis=1, inplace=True)
+    if not args.reportenergy:
+        df_usage.drop('kWh', axis=1, inplace=True)
+        df_usage.drop('PercentEnergy', axis=1, inplace=True)
     df_jobs.sort_values('PercentUse', inplace=True, ascending=False)
     print(df_jobs.to_markdown(index=False, floatfmt=".1f"))
     print()
