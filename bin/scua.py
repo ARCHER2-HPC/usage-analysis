@@ -463,6 +463,9 @@ for output in outputs:
     print()
     print(f'\n## {title[output]} distribution: by number of jobs\n')
     df_jobs = pd.DataFrame(job_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy', 'Users', 'Projects'])
+    if not args.reportenergy:
+        df_jobs.drop('kWh', axis=1, inplace=True)
+        df_jobs.drop('PercentEnergy', axis=1, inplace=True)
     df_jobs.sort_values('PercentUse', inplace=True, ascending=False)
     print(df_jobs.to_markdown(index=False, floatfmt=".1f"))
     print()
