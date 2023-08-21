@@ -29,7 +29,7 @@ version:          95
 academic license: Fee Payment
 commercial license: Fee Payment
 
-code type: DenseLinearAlgebra
+code type: DenseLinearAlgebra, SpectralMethods
 
 research area: Materials Science
 parallel-model: MPI
