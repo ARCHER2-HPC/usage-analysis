@@ -23,8 +23,8 @@ name: OpenSBLI
 regexp: OpenSBLI_mpi_openmp|OpenSBLI_mpi|OpenSBLI_openmp|OpenSBLI
 
 [metadata]
-primary language: Python
-version:          3
+primary language: C++
+version:
 
 academic license: None
 commercial license: None
