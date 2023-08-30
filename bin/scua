@@ -64,6 +64,7 @@ while getopts ":a:A:E:fgcmhknp:sS:tu:wx:" opt; do
       echo " -A account      Limit to specified account code, e.g. z01"
       echo " -E date/time    End date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
       echo " -f              Perform analysis of CPU frequency use"
+      echo " -l              Perform analysis of programming language use"
       echo " -k              Keeps the intermediate output from sacct in <prefix>_sacct.dat and <prefix>_sacct_users.dat"
       echo " -n              Do not run Python analysis - just produce data file"
       echo " -g              Produce graphs of usage data (as png)"
@@ -90,6 +91,9 @@ while getopts ":a:A:E:fgcmhknp:sS:tu:wx:" opt; do
       ;;
     f )
       python_opts="${python_opts} --cpufreq"
+      ;;
+    l )
+      python_opts="${python_opts} --lang"
       ;;
     g )
       python_opts="${python_opts} --plots"

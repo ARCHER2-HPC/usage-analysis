@@ -128,6 +128,7 @@ parser.add_argument('--md', dest='savemd', action='store_true', default=False, h
 parser.add_argument('--power', dest='analysepower', action='store_true', default=False, help='Produce node power usage distribution')
 parser.add_argument('--energy', dest='reportenergy', action='store_true', default=False, help='Report enery use in output. Note this is known to be inaccurate when just job steps are considered - consider using the scea tool instead to report energy use from jobs.')
 parser.add_argument('--motif', dest='analysemotif', action='store_true', default=False, help='Produce algorithmic motif usage distribution')
+parser.add_argument('--lang', dest='analyselang', action='store_true', default=False, help='Produce programming language usage distribution')
 parser.add_argument('--cpufreq', dest='analysecpufreq', action='store_true', default=False, help='Produce CPU frequency usage distribution')
 parser.add_argument('--dropnan', dest='dropnan', action='store_true', default=False, help='Drop all rows that contain NaN. Useful for strict comparisons between usage and energy use.')
 parser.add_argument('--prefix', dest='prefix', type=str, action='store', default='scua', help='Set the prefix to be used for output files')
@@ -215,13 +216,16 @@ df[['ProjectID','GroupID']] = df['Account'].str.split('-', 1, expand=True)
 # Identify the codes using regex from the code definitions
 df["Software"] = None
 df["Motif"] = 'Unknown'
+df["Language"] = 'Unknown'
 for code in codes:
     codere = re.compile(code.regexp)
-    df.loc[df.ExeName.str.contains(codere), ["Software", "Motif"]] = [code.name, code.type]
+    df.loc[df.ExeName.str.contains(codere), ["Software", "Motif", "Language"]] = [code.name, code.type, code.pri_lang]
 
-# Get the list of motifs from the column (get unique words in the column)
+# Get the list of motifs fnd languages from the column (get unique words in the column)
 motif_set = set()
 df['Motif'].str.split().apply(motif_set.update)
+lang_set = set()
+df['Language'].str.split().apply(lang_set.update)
 
 # Add research areas if supplied
 if args.projlist is not None:
@@ -391,6 +395,24 @@ if args.analysemotif and args.analysepower:
     outputs.append(category)
     category_list[category] = motif_set
     category_col[category] = 'Motif'
+    analysis_col[category] = 'NodePower'
+    analyse_none[category] = False
+    full_node[category] = True
+if args.analyselang:
+    category = 'LangSize'
+    title[category] = 'Programming language job size'
+    outputs.append(category)
+    category_list[category] = lang_set
+    category_col[category] = 'Language'
+    analysis_col[category] = 'Cores'
+    analyse_none[category] = False
+    full_node[category] = False
+if args.analyselang and args.analysepower:
+    category = 'LangPower'
+    title[category] = 'Programming language node power use'
+    outputs.append(category)
+    category_list[category] = lang_set
+    category_col[category] = 'Language'
     analysis_col[category] = 'NodePower'
     analyse_none[category] = False
     full_node[category] = True
