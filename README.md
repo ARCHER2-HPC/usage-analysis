@@ -25,6 +25,11 @@ the system where the Slurm `sacct` command is available.
 `scua.py` uses Pandas, numpy, matplotlib, tabulate and seaborn on top of a standard Python
 3 installation.
 
+### Environment setup
+
+You must set the environment variable `SCUA_BASE` to point to the location of the
+downloaded repository.
+
 ### Analyses available
 
 The type of analysis you wish to run on the data is specified by command line 
