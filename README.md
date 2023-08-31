@@ -22,7 +22,7 @@ markdown) are available for all analysis breakdowns.
 `scua` is a bash script and so has no requirements other than it must be run on 
 the system where the Slurm `sacct` command is available.
 
-`scua.py` uses Pandas, numpy, matplotlib and seaborn on top of a standard Python
+`scua.py` uses Pandas, numpy, matplotlib, tabulate and seaborn on top of a standard Python
 3 installation.
 
 ### Analyses available
