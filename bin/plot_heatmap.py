@@ -7,8 +7,9 @@ import sys
 import re
 import numpy as np
 
-csvfile = open(sys.argv[1], "r")
-postfix = sys.argv[2].strip()
+prefix = sys.argv[1].strip()
+csvfile = open(sys.argv[2], "r")
+
 
 # Hardcoded job sizes are horrible but we would have to parse the file twice to get them
 size = ["1", "2", "3-4", "5-8", "9-16", "17-32", "33-64", "65-128", "129-256", "257-512",
@@ -99,7 +100,6 @@ ax1 = plt.subplot(1, 1, 1)
 masked_array = np.ma.masked_where(xeff==-1, xeff)
 cmap = cm.RdYlGn
 cmap.set_bad('w', 1.0)
-print(masked_array)
 cax1 = ax1.imshow(masked_array, interpolation='nearest', cmap=cmap, vmin=0.0, vmax=1.0)
 plt.xticks(np.arange(len(size)), size, rotation=45)
 ax1.set_yticks(np.arange(len(jobtime)))
@@ -113,7 +113,7 @@ for i in range(len(jobtime)):
    for j in range(len(size)):
       ax1.text(j, i, str(rjobs[i][j]), horizontalalignment='center', verticalalignment='center', fontsize=7)
 
-fig.savefig(postfix + "_sc_heatmap.png", bbox_inches='tight', dpi=300)
+fig.savefig(prefix + "_sc_heatmap.png", bbox_inches='tight', dpi=300)
 
 fig.clf()
 ax3 = plt.subplot(1, 1, 1)
@@ -137,5 +137,5 @@ for i in range(len(jobtime)):
       else:
          ax3.text(j, i, str(rjobs[i][j]), horizontalalignment='center', verticalalignment='center', fontsize=7)
 
-fig.savefig(postfix + "_usage_heatmap.png", bbox_inches='tight', dpi=300)
+fig.savefig(prefix + "_usage_heatmap.png", bbox_inches='tight', dpi=300)
 
