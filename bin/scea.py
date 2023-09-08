@@ -308,6 +308,7 @@ category_list = {}
 category_col = {}
 analysis_col = {}
 analyse_none = {}
+fullmatch = {}
 
 # Job size distribution for software is always computed
 category = 'CodeSize'
@@ -317,6 +318,7 @@ category_list[category] = codelist
 category_col[category] = 'Software'
 analysis_col[category] = 'Nodes'
 analyse_none[category] = True
+fullmatch[category] = False
 # Optional categories
 if args.analysepower:
     category = 'CodePower'
@@ -326,6 +328,7 @@ if args.analysepower:
     category_col[category] = 'Software'
     analysis_col[category] = 'NodePower'
     analyse_none[category] = True
+    fullmatch[category] = False
 if args.projlist is not None:
     category = 'AreaSize'
     outputs.append(category)
@@ -334,6 +337,7 @@ if args.projlist is not None:
     category_col[category] = 'Area'
     analysis_col[category] = 'Nodes'
     analyse_none[category] = False
+    fullmatch[category] = False
 if args.analysepower and args.projlist is not None:
     category = 'AreaPower'
     title[category] = 'Research area node power use'
@@ -342,6 +346,7 @@ if args.analysepower and args.projlist is not None:
     category_col[category] = 'Area'
     analysis_col[category] = 'NodePower'
     analyse_none[category] = False
+    fullmatch[category] = False
 if args.analysemotif:
     category = 'MotifSize'
     title[category] = 'Algorithmic motifs job size'
@@ -350,6 +355,7 @@ if args.analysemotif:
     category_col[category] = 'Motif'
     analysis_col[category] = 'Nodes'
     analyse_none[category] = False
+    fullmatch[category] = False
 if args.analysemotif and args.analysepower:
     category = 'MotifPower'
     title[category] = 'Algorithmic motifs node power use'
@@ -358,6 +364,7 @@ if args.analysemotif and args.analysepower:
     category_col[category] = 'Motif'
     analysis_col[category] = 'NodePower'
     analyse_none[category] = False
+    fullmatch[category] = False
 
 ######################################################################
 # Loop over the defined output categories computing distributions
@@ -373,7 +380,10 @@ for output in outputs:
     catcol = category_col[output]
     ancol = analysis_col[output]
     for category in categories:
-        mask = df_output[catcol].str.contains(re.escape(str(category)), na=False)
+        if fullmatch[output]:
+            mask = df_output[catcol].str.fullmatch(re.escape(str(category)), na=False)
+        else:
+            mask = df_output[catcol].str.contains(re.escape(str(category)), na=False)
         df_cat = df_output[mask]
         if not df_cat.empty:
             dist, wdist = distribution(df_cat, category, allcu, allen, ancol, 'Nodeh')
@@ -434,7 +444,10 @@ if args.makeplots:
     catcol = 'Software'
     ancol = 'Nodes'
     for category in categories:
-        mask = df_output[catcol].str.contains(re.escape(category), na=False)
+        if fullmatch[output]:
+            mask = df_output[catcol].str.fullmatch(re.escape(str(category)), na=False)
+        else:
+            mask = df_output[catcol].str.contains(re.escape(str(category)), na=False)
         df_cat = df_output[mask]
         if not df_cat.empty:
             dist, wdist = distribution(df_cat, category, allcu, allen, ancol, 'Nodeh')

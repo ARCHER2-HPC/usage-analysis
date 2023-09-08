@@ -342,6 +342,7 @@ category_col = {}
 analysis_col = {}
 analyse_none = {}
 full_node = {}
+fullmatch = {}
 
 # Job size distribution for software is always computed
 category = 'CodeSize'
@@ -352,6 +353,7 @@ category_col[category] = 'Software'
 analysis_col[category] = 'Cores'
 analyse_none[category] = True
 full_node[category] = False
+fullmatch[category] = True
 # Optional categories
 if args.analysepower:
     category = 'CodePower'
@@ -362,6 +364,7 @@ if args.analysepower:
     analysis_col[category] = 'NodePower'
     analyse_none[category] = True
     full_node[category] = True
+    fullmatch[category] = True
 if args.projlist is not None:
     category = 'AreaSize'
     outputs.append(category)
@@ -371,6 +374,7 @@ if args.projlist is not None:
     analysis_col[category] = 'Cores'
     analyse_none[category] = False
     full_node[category] = False
+    fullmatch[category] = True
 if args.analysepower and args.projlist is not None:
     category = 'AreaPower'
     title[category] = 'Research area node power use'
@@ -380,6 +384,7 @@ if args.analysepower and args.projlist is not None:
     analysis_col[category] = 'NodePower'
     analyse_none[category] = False
     full_node[category] = True
+    fullmatch[category] = True
 if args.analysemotif:
     category = 'MotifSize'
     title[category] = 'Algorithmic motifs job size'
@@ -389,6 +394,7 @@ if args.analysemotif:
     analysis_col[category] = 'Cores'
     analyse_none[category] = False
     full_node[category] = False
+    fullmatch[category] = False
 if args.analysemotif and args.analysepower:
     category = 'MotifPower'
     title[category] = 'Algorithmic motifs node power use'
@@ -398,6 +404,7 @@ if args.analysemotif and args.analysepower:
     analysis_col[category] = 'NodePower'
     analyse_none[category] = False
     full_node[category] = True
+    fullmatch[category] = False
 if args.analyselang:
     category = 'LangSize'
     title[category] = 'Programming language job size'
@@ -407,6 +414,7 @@ if args.analyselang:
     analysis_col[category] = 'Cores'
     analyse_none[category] = False
     full_node[category] = False
+    fullmatch[category] = True
 if args.analyselang and args.analysepower:
     category = 'LangPower'
     title[category] = 'Programming language node power use'
@@ -416,6 +424,7 @@ if args.analyselang and args.analysepower:
     analysis_col[category] = 'NodePower'
     analyse_none[category] = False
     full_node[category] = True
+    fullmatch[category] = True
 if args.analysecpufreq:
     category = 'CPUFreqSize'
     title[category] = 'CPU frequency job size'
@@ -425,6 +434,7 @@ if args.analysecpufreq:
     analysis_col[category] = 'Cores'
     analyse_none[category] = True
     full_node[category] = False
+    fullmatch[category] = True
 if args.analysecpufreq and args.analysepower:
     category = 'CPUFreqPower'
     title[category] = 'CPU frequency node power use'
@@ -434,6 +444,7 @@ if args.analysecpufreq and args.analysepower:
     analysis_col[category] = 'NodePower'
     analyse_none[category] = True
     full_node[category] = True
+    fullmatch[category] = True
 
 ######################################################################
 # Loop over the defined output categories computing distributions
@@ -453,7 +464,10 @@ for output in outputs:
     catcol = category_col[output]
     ancol = analysis_col[output]
     for category in categories:
-        mask = df_output[catcol].str.contains(re.escape(str(category)), na=False)
+        if fullmatch[output]:
+            mask = df_output[catcol].str.fullmatch(re.escape(str(category)), na=False)
+        else:
+            mask = df_output[catcol].str.contains(re.escape(str(category)), na=False)
         df_cat = df_output[mask]
         if not df_cat.empty:
             dist, wdist = distribution(df_cat, category, allcu, allen, ancol, 'Nodeh')
@@ -514,7 +528,10 @@ if args.makeplots:
     catcol = 'Software'
     ancol = 'Cores'
     for category in categories:
-        mask = df_output[catcol].str.contains(re.escape(category), na=False)
+        if fullmatch[output]:
+            mask = df_output[catcol].str.fullmatch(re.escape(str(category)), na=False)
+        else:
+            mask = df_output[catcol].str.contains(re.escape(str(category)), na=False)
         df_cat = df_output[mask]
         if not df_cat.empty:
             dist, wdist = distribution(df_cat, category, allcu, allen, ancol, 'Nodeh')
