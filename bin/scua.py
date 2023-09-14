@@ -214,10 +214,13 @@ df['JobID'] = df['JobID'].astype(str)
 df[['ProjectID','GroupID']] = df['Account'].str.split('-', 1, expand=True)
 
 # Identify the codes using regex from the code definitions
-df["Software"] = None
+df["Software"] = 'Unknown'
 df["Motif"] = 'Unknown'
 df["Language"] = 'Unknown'
+# Rarely, an exe name is NaN so we need to remove those
+df.dropna(subset = ['ExeName'], inplace=True)
 for code in codes:
+    print(code.name, code.type, code.pri_lang)
     codere = re.compile(code.regexp)
     df.loc[df.ExeName.str.contains(codere), ["Software", "Motif", "Language"]] = [code.name, code.type, code.pri_lang]
 
