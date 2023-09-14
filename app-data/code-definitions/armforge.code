@@ -23,8 +23,8 @@ name: Arm Forge
 regexp: forge-backend
 
 [metadata]
-primary language: 
-version:          
+primary language: Unknown
+version: Unknown
 
 academic license: Commercial
 commercial license: Commercial
