@@ -117,6 +117,8 @@ def reindex_df(df, weight_col):
 CPN = 128          # Number of cores per node
 MAX_POWER = 850    # Maximum per-node power draw to consider (in W) 
 
+unknown_thresh = 0.01
+
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='Compute software usage data from Slurm output.')
 parser.add_argument('filename', type=str, nargs=1, help='Data file containing listing of Slurm jobs')
@@ -133,6 +135,7 @@ parser.add_argument('--cpufreq', dest='analysecpufreq', action='store_true', def
 parser.add_argument('--dropnan', dest='dropnan', action='store_true', default=False, help='Drop all rows that contain NaN. Useful for strict comparisons between usage and energy use.')
 parser.add_argument('--prefix', dest='prefix', type=str, action='store', default='scua', help='Set the prefix to be used for output files')
 parser.add_argument('--projects', dest='projlist', type=str, action='store', default=None, help='The file containing a list of project IDs and associated research areas')
+parser.add_argument('--thresh', dest='unknown_thresh', type=float, action='store', default=0.01, help='Usage fraction obove which unknown exe names are printed. Default is 0.01 - 1 percent.')
 parser.add_argument('-A', dest='account', type=str, action='store', nargs='?', default='', help='The slurm account specified for the report')
 parser.add_argument('-u', dest='user', type=str, action='store', nargs='?', default='', help='The user specified for the report')
 args = parser.parse_args()
@@ -277,14 +280,14 @@ if args.usersplit:
 allcu = df['Nodeh'].sum()
 allen = df['Energy'].sum()
 
-# Software that are unidentified but have more than 1% of total use
-mask = df['Software'].values == None
+# Software that are unidentified but have significant use
+mask = df['Software'].values == 'Unknown'
 df_code = df[mask]
 groupf = {'Nodeh':'sum', 'Count':'sum'}
 df_group = df_code.groupby(['ExeName']).agg(groupf)
 df_group.sort_values('Nodeh', inplace=True, ascending=False)
-thresh = allcu * 0.01
-print('\n## Unidentified executables with significant use\n')
+thresh = allcu * args.unknown_thresh
+print(f'\n## Unidentified executables with significant use (threashold = {args.unknown_thresh:.3f})\n')
 print(df_group.loc[df_group['Nodeh'] >= thresh].to_markdown(floatfmt=".1f"))
 print()
 
