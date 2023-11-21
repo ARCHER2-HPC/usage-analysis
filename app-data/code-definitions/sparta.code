@@ -19,17 +19,17 @@
 #
 
 [code info]
-name: OpenSBLI
-regexp: OpenSBLI_mpi_openmp|OpenSBLI_mpi|OpenSBLI_openmp|OpenSBLI
+name: SPARTA
+regexp: spa_kokkos
 
 [metadata]
 primary language: C++
 version:
 
-academic license: None
-commercial license: None
+academic license: LGPL2
+commercial license: LGPL2
 
-code type: UnstructuredGrid
+code type: MonteCarloMethods
 
-research area: Computational Fluid Dynamics
-parallel-model: MPI+OpenMP
+research area: Combustion
+parallel-model: MPI
