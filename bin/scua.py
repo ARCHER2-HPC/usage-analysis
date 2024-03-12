@@ -1,4 +1,4 @@
-#!/usr//bin/env python
+#!/usr//bin/env python3
 # scua.py (Slurm Code Usage Analysis)
 #
 # usage: scua.py [options] filename
@@ -214,7 +214,7 @@ df['NodePower'].mask(df['NodePower'].gt(MAX_POWER), inplace=True)
 
 # Split Account column into ProjectID and GroupID
 df['JobID'] = df['JobID'].astype(str)
-df[['ProjectID','GroupID']] = df['Account'].str.split('-', 1, expand=True)
+df[['ProjectID','GroupID']] = df['Account'].str.split(pat='-', n=1, expand=True)
 
 # Identify the codes using regex from the code definitions
 df["Software"] = 'Unknown'

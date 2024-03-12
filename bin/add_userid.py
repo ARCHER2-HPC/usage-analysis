@@ -1,4 +1,4 @@
-#!/usr//bin/env python
+#!/usr//bin/env python3
 #
 # This short script combines two outputs from sacct 
 # to add username details to Slurm job steps (the username
@@ -35,7 +35,7 @@ colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','
 df = pd.read_csv(sys.argv[1], names=colid, sep='::', engine='python')
 
 df['JobID'] = df['JobID'].astype(str)
-df[['JobID','SubJobID']] = df['JobID'].str.split('.', 1, expand=True)
+df[['JobID','SubJobID']] = df['JobID'].str.split(pat='.', n=1, expand=True)
 
 # Read user IDs associated with jobs
 userdict = {}
