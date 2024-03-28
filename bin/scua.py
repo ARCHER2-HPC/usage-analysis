@@ -113,7 +113,7 @@ def reindex_df(df, weight_col):
 # Main code
 #=======================================================
 
-# Constants
+# Defaults
 CPN = 128          # Number of cores per node
 MAX_POWER = 850    # Maximum per-node power draw to consider (in W) 
 
@@ -132,6 +132,8 @@ parser.add_argument('--energy', dest='reportenergy', action='store_true', defaul
 parser.add_argument('--motif', dest='analysemotif', action='store_true', default=False, help='Produce algorithmic motif usage distribution')
 parser.add_argument('--lang', dest='analyselang', action='store_true', default=False, help='Produce programming language usage distribution')
 parser.add_argument('--cpufreq', dest='analysecpufreq', action='store_true', default=False, help='Produce CPU frequency usage distribution')
+parser.add_argument('--cpn', dest='CPN', action='store', default=128, help='Set number of cores per node')
+parser.add_argument('--mpow', dest='MAX_POWER', action='store', default=850, help='Set maximum realistic power draw for a compute node (used to remove jobs with counter errors)')
 parser.add_argument('--dropnan', dest='dropnan', action='store_true', default=False, help='Drop all rows that contain NaN. Useful for strict comparisons between usage and energy use.')
 parser.add_argument('--prefix', dest='prefix', type=str, action='store', default='scua', help='Set the prefix to be used for output files')
 parser.add_argument('--projects', dest='projlist', type=str, action='store', default=None, help='The file containing a list of project IDs and associated research areas')
