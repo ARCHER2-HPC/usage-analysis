@@ -62,6 +62,7 @@ while getopts ":a:A:E:fgcmhknp:q:r:sS:tu:wx:" opt; do
       echo "Options:"
       echo " -a account_csv  Perform analysis by research area. account_csv is a CSV file with a mapping of account codes to research areas"
       echo " -A account      Limit to specified account code, e.g. z01"
+      echo " -b              Shared node use"
       echo " -E date/time    End date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
       echo " -f              Perform analysis of CPU frequency use"
       echo " -l              Perform analysis of programming language use"
@@ -70,6 +71,7 @@ while getopts ":a:A:E:fgcmhknp:q:r:sS:tu:wx:" opt; do
       echo " -g              Produce graphs of usage data (as png)"
       echo " -c              Save tables of data (as csv)"
       echo " -m              Save tables of data (as markdown)"
+      echo " -n units        Specify usage units: Nodeh or Coreh (default: Nodeh)"
       echo " -h              Show this help"
       echo " -p prefix       Prefix for output file names. Default prefix is 'scua'"
       echo " -q qos          Limit analysis to specified Slurm QoS"
@@ -84,6 +86,9 @@ while getopts ":a:A:E:fgcmhknp:q:r:sS:tu:wx:" opt; do
       ;;
     a )
       python_opts="${python_opts} --projects=${OPTARG}"
+      ;;
+    b )
+      python_opts="${python_opts} --sharednode"
       ;;
     k )
       keep_file=1
@@ -105,6 +110,9 @@ while getopts ":a:A:E:fgcmhknp:q:r:sS:tu:wx:" opt; do
       ;;
     m )
       python_opts="${python_opts} --md"
+      ;;
+    n )
+      python_opts="${python_opts} --units=${OPTARG}"
       ;;
     p )
       python_opts="${python_opts} --prefix=${OPTARG}"
