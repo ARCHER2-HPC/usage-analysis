@@ -49,7 +49,7 @@ keep_file=""
 run_python=1
 python_opts=""
 prefix="scua"
-while getopts ":a:A:E:fgcmhknp:q:r:sS:tu:wx:" opt; do
+while getopts ":a:bA:E:fgcmhkno:p:q:r:sS:tu:wx:" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} --group=${OPTARG}"
@@ -71,7 +71,7 @@ while getopts ":a:A:E:fgcmhknp:q:r:sS:tu:wx:" opt; do
       echo " -g              Produce graphs of usage data (as png)"
       echo " -c              Save tables of data (as csv)"
       echo " -m              Save tables of data (as markdown)"
-      echo " -n units        Specify usage units: Nodeh or Coreh (default: Nodeh)"
+      echo " -o units        Specify usage units: Nodeh or Coreh (default: Nodeh)"
       echo " -h              Show this help"
       echo " -p prefix       Prefix for output file names. Default prefix is 'scua'"
       echo " -q qos          Limit analysis to specified Slurm QoS"
