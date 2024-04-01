@@ -49,7 +49,7 @@ keep_file=""
 run_python=1
 python_opts=""
 prefix="scua"
-while getopts ":a:A:E:fgcmhknp:q:sS:tu:wx:" opt; do
+while getopts ":a:A:E:fgcmhknp:q:r:sS:tu:wx:" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} --group=${OPTARG}"
@@ -72,6 +72,7 @@ while getopts ":a:A:E:fgcmhknp:q:sS:tu:wx:" opt; do
       echo " -m              Save tables of data (as markdown)"
       echo " -h              Show this help"
       echo " -p prefix       Prefix for output file names. Default prefix is 'scua'"
+      echo " -q qos          Limit analysis to specified Slurm QoS"
       echo " -q partition    Limit analysis to specified Slurm partition"
       echo " -s              Split unknown, Python and a.out use by user"
       echo " -S date/time    Start date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
@@ -110,6 +111,9 @@ while getopts ":a:A:E:fgcmhknp:q:sS:tu:wx:" opt; do
       prefix=${OPTARG}
       ;;
     q )
+      extra_opts="${extra_opts} --qos=${OPTARG}"
+      ;;
+    r )
       extra_opts="${extra_opts} --partition=${OPTARG}"
       ;;
     s )
