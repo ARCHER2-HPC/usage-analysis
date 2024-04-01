@@ -73,7 +73,7 @@ while getopts ":a:A:E:fgcmhknp:q:r:sS:tu:wx:" opt; do
       echo " -h              Show this help"
       echo " -p prefix       Prefix for output file names. Default prefix is 'scua'"
       echo " -q qos          Limit analysis to specified Slurm QoS"
-      echo " -q partition    Limit analysis to specified Slurm partition"
+      echo " -r partition    Limit analysis to specified Slurm partition"
       echo " -s              Split unknown, Python and a.out use by user"
       echo " -S date/time    Start date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
       echo " -t              Perform analysis by computational motif"
