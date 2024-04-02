@@ -115,6 +115,7 @@ def reindex_df(df, weight_col):
 
 # Defaults
 CPN = 128          # Number of cores per node
+GPN = 4          # Number of GPUS per node
 MAX_POWER = 850    # Maximum per-node power draw to consider (in W) 
 
 unknown_thresh = 0.01
@@ -125,10 +126,12 @@ parser.add_argument('filename', type=str, nargs=1, help='Data file containing li
 parser.add_argument('-A', dest='account', type=str, action='store', nargs='?', default='', help='The slurm account specified for the report. Default: none')
 parser.add_argument('--anon', dest='anon', action='store_false', default=True, help='If splitting unknown use by user, anonymise usernames. Default: false')
 parser.add_argument('--cpn', dest='CPN', action='store', default=128, help='Set number of cores per node. Default: 128')
+parser.add_argument('--gpn', dest='GPN', action='store', default=4, help='Set number of GPUs per node. Only has an effect if --gpu is specified. Default: 4')
 parser.add_argument('--csv', dest='savecsv', action='store_true', default=False, help='Produce data files in CSV. Default: false')
 parser.add_argument('--cpufreq', dest='analysecpufreq', action='store_true', default=False, help='Produce CPU frequency usage distribution. Default: false')
 parser.add_argument('--dropnan', dest='dropnan', action='store_true', default=False, help='Drop all rows that contain NaN. Useful for strict comparisons between usage and energy use. Default: false')
 parser.add_argument('--energy', dest='reportenergy', action='store_true', default=False, help='Report enery use in output. Note this is known to be inaccurate when just job steps are considered - consider using the scea tool instead to report energy use from jobs. Default: false')
+parser.add_argument('--gpu', dest='usegpu', action='store_true', default=False, help='Read number of GPU used as part of input data and use nGPU and GPUh as the reporting unit')
 parser.add_argument('--lang', dest='analyselang', action='store_true', default=False, help='Produce programming language usage distribution. Default: false')
 parser.add_argument('--md', dest='savemd', action='store_true', default=False, help='Produce data files in MD. Default: false')
 parser.add_argument('--motif', dest='analysemotif', action='store_true', default=False, help='Produce algorithmic motif usage distribution. Default: false')
@@ -187,7 +190,14 @@ col_types = {
         'CPUFreq': 'str',
         'SubJobID': 'str'
         }
-df = pd.read_csv(args.filename[0], names=colid, dtype=col_types, sep=',', engine='python', header=0)
+
+if args.usegpu:
+   colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','CPUFreq','NGPUS','SubJobID']
+   col_types['NGPUS'] = 'str'
+   df = pd.read_csv(args.filename[0], names=colid, dtype=col_types, sep=',', engine='python', header=0)
+   df['NGPUS'] = pd.to_numeric(df['NGPUS'], errors='coerce')
+else:
+   df = pd.read_csv(args.filename[0], names=colid, dtype=col_types, sep=',', engine='python', header=0)
 # Count helps with number of jobs
 df['Count'] = 1
 
@@ -225,6 +235,10 @@ if useunits == 'Nodeh':
 elif useunits == 'Coreh':
    df['Usage'] = df['Cores'] * df['Runtime'] / 3600.0
 
+if args.usegpu:
+    useunits = 'GPUh'
+    df['Usage'] = df['NGPUS'] * df['Runtime'] / 3600.0
+
 if not args.sharednode:
 #   If the number of cores is less than a node then we need to get a 
 #   fractional node hour count and fractional energy
@@ -233,7 +247,10 @@ if not args.sharednode:
 #     energy
 #   Note: the weakness here is if people are using less cores than a full
 #     node but are still using SMT. We will overcount the time for this case.
-   df.loc[df['Cores'] < CPN, 'Usage'] = df['Cores'] * df['Runtime'] / (CPN * 3600.0)
+   if args.usegpu:
+      df.loc[df['NGPUS'] < GPN, 'Usage'] = df['NGPUS'] * df['Runtime'] / (GPN * 3600.0)
+   else:
+      df.loc[df['Cores'] < CPN, 'Usage'] = df['Cores'] * df['Runtime'] / (CPN * 3600.0)
    df.loc[df['Cores'] < CPN, 'Energy'] = df['Cores'] * df['Energy'] / CPN 
    df.loc[df['Cores'] < CPN, 'NodePower'] = df['Cores'] * df['NodePower'] / CPN
 
@@ -381,7 +398,10 @@ outputs.append(category)
 title[category] = 'Software job size'
 category_list[category] = codelist
 category_col[category] = 'Software'
-analysis_col[category] = 'Cores'
+if args.usegpu:
+   analysis_col[category] = 'NGPUS'
+else:
+   analysis_col[category] = 'Cores'
 analyse_none[category] = True
 full_node[category] = False
 fullmatch[category] = True
@@ -402,7 +422,10 @@ if args.projlist is not None:
     title[category] = 'Research area job size'
     category_list[category] = areaset
     category_col[category] = 'Area'
-    analysis_col[category] = 'Cores'
+    if args.usegpu:
+       analysis_col[category] = 'NGPUS'
+    else:
+       analysis_col[category] = 'Cores'
     analyse_none[category] = False
     full_node[category] = False
     fullmatch[category] = True
@@ -422,7 +445,10 @@ if args.analysemotif:
     outputs.append(category)
     category_list[category] = motif_set
     category_col[category] = 'Motif'
-    analysis_col[category] = 'Cores'
+    if args.usegpu:
+       analysis_col[category] = 'NGPUS'
+    else:
+       analysis_col[category] = 'Cores'
     analyse_none[category] = False
     full_node[category] = False
     fullmatch[category] = False
@@ -442,7 +468,10 @@ if args.analyselang:
     outputs.append(category)
     category_list[category] = lang_set
     category_col[category] = 'Language'
-    analysis_col[category] = 'Cores'
+    if args.usegpu:
+       analysis_col[category] = 'NGPUS'
+    else:
+       analysis_col[category] = 'Cores'
     analyse_none[category] = False
     full_node[category] = False
     fullmatch[category] = True
@@ -462,7 +491,10 @@ if args.analysecpufreq:
     outputs.append(category)
     category_list[category] = cpufreq_set
     category_col[category] = 'CPUFreq'
-    analysis_col[category] = 'Cores'
+    if args.usegpu:
+       analysis_col[category] = 'NGPUS'
+    else:
+       analysis_col[category] = 'Cores'
     analyse_none[category] = True
     full_node[category] = False
     fullmatch[category] = True
@@ -485,7 +517,10 @@ for output in outputs:
     df_output = df
     # This restricts to full nodes if needed
     if full_node[output]:
-        mask = df['Cores'].ge(CPN)
+        if args.usegpu:
+           mask = df['GPUS'].ge(GPN)
+        else:
+           mask = df['Cores'].ge(CPN)
         df_output = df[mask]
 
     job_stats = []
@@ -557,7 +592,10 @@ if args.makeplots:
     categories = codelist
     # The category column and analysis columns
     catcol = 'Software'
-    ancol = 'Cores'
+    if args.usegpu:
+       ancol = 'NGPUS'
+    else:
+       ancol = 'Cores'
     for category in categories:
         if fullmatch[output]:
             mask = df_output[catcol].str.fullmatch(re.escape(str(category)), na=False)
@@ -599,9 +637,13 @@ if args.makeplots:
     topcodes = df_usage['Software'].head(16).to_list()[1:]
     df_topcodes = df[df['Software'].isin(topcodes)]
     plt.figure(figsize=[8,6])
+    if args.usegpu:
+        xcat = 'NGPUS'
+    else:
+        xcat = 'Cores'
     sns.boxplot(
         y="Software",
-        x="Cores",
+        x=xcat,
         orient='h',
         color='lightseagreen',
         order=topcodes,
@@ -614,7 +656,7 @@ if args.makeplots:
             },
         data=reindex_df(df_topcodes, weight_col=useunits)
         )
-    plt.xlabel('Cores')
+    plt.xlabel(xcat)
     sns.despine()
     plt.tight_layout()
     plt.savefig(f'{args.prefix}_top15_boxplot.png', dpi=300)

@@ -34,9 +34,12 @@
 # Paths to Python utilities
 SCUA_PYTHON="${SCUA_BASE}/bin/scua.py"
 SCUA_USERADD="${SCUA_BASE}/bin/add_userid.py"
+SCUA_GPUADD="${SCUA_BASE}/bin/add_gpu_user.py"
 # Use :: as the delimiter to avoid issues with commas in job names
-SACCT_STEP_BASE_OPTS="--format JobIDRaw,JobName%30,User,Account,NNodes,NTasks,ElapsedRaw,State,ConsumedEnergyRaw,MaxRSS,AveRSS,ReqCPUFreq -P --delimiter ::"
-SACCT_JOB_BASE_OPTS="-X --format JobIDRaw,JobName%30,User,Account,NNodes,NCPUS,ElapsedRaw,State,ConsumedEnergyRaw,MaxRSS,AveRSS,ReqCPUFreq -P --delimiter ::"
+SACCT_STEP_BASE_OPTS="-n --format JobIDRaw,JobName%30,User,Account,NNodes,NTasks,ElapsedRaw,State,ConsumedEnergyRaw,MaxRSS,AveRSS,ReqCPUFreq -P --delimiter ::"
+SACCT_STEP_GPU_OPTS="-n --format JobIDRaw,State,AllocTRES%100 -P --delimiter ,"
+SACCT_JOB_BASE_OPTS="-n -X --format JobIDRaw,JobName%30,User,Account,NNodes,NCPUS,ElapsedRaw,State,ConsumedEnergyRaw,MaxRSS,AveRSS,ReqCPUFreq -P --delimiter ::"
+SACCT_JOB_GPU_OPTS="-n -X --format JobIDRaw,State,AllocTRES%100 -P --delimiter ,"
 SACCT_USER_BASE_OPTS="-X --format JobIDRaw,User -P --delimiter ,"
 SACCT_STEP_FILE="scua_sacct_steps.dat"
 SACCT_JOB_FILE="scua_sacct_jobs.dat"
@@ -49,10 +52,11 @@ startdate=""
 enddate=""
 extra_opts=""
 keep_file=""
+get_gpu=""
 run_python=1
 python_opts=""
 prefix="scua"
-while getopts ":a:bA:E:fgcmhkno:p:q:r:sS:tu:wx:" opt; do
+while getopts ":a:bA:E:fgcmhkno:p:q:r:sS:tu:wxX:" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} --group=${OPTARG}"
@@ -68,10 +72,10 @@ while getopts ":a:bA:E:fgcmhkno:p:q:r:sS:tu:wx:" opt; do
       echo " -b              Shared node use"
       echo " -E date/time    End date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
       echo " -f              Perform analysis of CPU frequency use"
+      echo " -g              Perform analysis of GPU use"
       echo " -l              Perform analysis of programming language use"
       echo " -k              Keeps the intermediate output from sacct in <prefix>_sacct.dat and <prefix>_sacct_users.dat"
       echo " -n              Do not run Python analysis - just produce data file"
-      echo " -g              Produce graphs of usage data (as png)"
       echo " -c              Save tables of data (as csv)"
       echo " -m              Save tables of data (as markdown)"
       echo " -o units        Specify usage units: Nodeh or Coreh (default: Nodeh)"
@@ -84,7 +88,8 @@ while getopts ":a:bA:E:fgcmhkno:p:q:r:sS:tu:wx:" opt; do
       echo " -t              Perform analysis by computational motif"
       echo " -u user         Limit to specific user"
       echo " -w              Perform analysis of mean node power draw"
-      echo " -x STATE1|STATE2|...  Specify Slurm job states to exlude from the analysis. Default is ${SACCT_EXCLUDE_STATES}"
+      echo " -x              Produce graphs of usage data (as png)"
+      echo " -X STATE1|STATE2|...  Specify Slurm job states to exlude from the analysis. Default is ${SACCT_EXCLUDE_STATES}"
       exit 0
       ;;
     a )
@@ -105,8 +110,12 @@ while getopts ":a:bA:E:fgcmhkno:p:q:r:sS:tu:wx:" opt; do
     l )
       python_opts="${python_opts} --lang"
       ;;
-    g )
+    x )
       python_opts="${python_opts} --plots"
+      ;;
+    g )
+      get_gpu=1
+      python_opts="${python_opts} --gpu"
       ;;
     c )
       python_opts="${python_opts} --csv"
@@ -142,7 +151,7 @@ while getopts ":a:bA:E:fgcmhkno:p:q:r:sS:tu:wx:" opt; do
     w )
       python_opts="${python_opts} --power"
       ;;
-    x )
+    X )
       SACCT_EXCLUDE_STATES="${OPTARG}"
       ;;
     \? )
@@ -158,8 +167,10 @@ done
 shift $((OPTIND -1))
 
 SACCT_STEP_FILE="${prefix}_sacct_step.dat"
+SACCT_STEP_GPU_FILE="${prefix}_sacct_step_gpu.dat"
 SACCT_USER_FILE="${prefix}_sacct_users.dat"
 SACCT_JOB_FILE="${prefix}_sacct_job.dat"
+SACCT_JOB_GPU_FILE="${prefix}_sacct_job_gpu.dat"
 SACCT_FILE="${prefix}_sacct.dat"
 extra_opts="${extra_opts} -a"
 echo "Running: sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_STEP_BASE_OPTS} | egrep \"^[0-9]+\.[0-9]\" | egrep -v \"${SACCT_EXCLUDE_STATES}\""
@@ -170,9 +181,20 @@ sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_JOB_BASE_OPTS} | egrep -v "$
 # Run to get the user ID associated with the jobs
 sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_USER_BASE_OPTS} | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_USER_FILE}
 
-# Here we need to merge the job step data with the username information
-echo "Running: ${SCUA_USERADD} ${SACCT_STEP_FILE} ${SACCT_JOB_FILE} ${SACCT_USER_FILE} ${SACCT_FILE}"
-${SCUA_USERADD} ${SACCT_STEP_FILE} ${SACCT_JOB_FILE} ${SACCT_USER_FILE} ${SACCT_FILE}
+if [ ${get_gpu} -eq 1 ]
+then
+   # Extract number of GPUS per job and add userids 
+   echo "Running: sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_STEP_GPU_OPTS} | egrep '^[0-9]+\.[0-9]' | egrep -v \"${SACCT_EXCLUDE_STATES}\""
+   sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_STEP_GPU_OPTS} | egrep '^[0-9]+\.[0-9]' | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_STEP_GPU_FILE}
+   echo "Running: sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_JOB_GPU_OPTS} | egrep -v \"${SACCT_EXCLUDE_STATES}\""
+   sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_JOB_GPU_OPTS} | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_JOB_GPU_FILE}
+   echo "Running: ${SCUA_GPUADD} ${SACCT_STEP_FILE} ${SACCT_STEP_GPU_FILE} ${SACCT_JOB_FILE} ${SACCT_JOB_GPU_FILE} ${SACCT_USER_FILE} ${SACCT_FILE}"
+   ${SCUA_GPUADD} ${SACCT_STEP_FILE} ${SACCT_STEP_GPU_FILE} ${SACCT_JOB_FILE} ${SACCT_JOB_GPU_FILE} ${SACCT_USER_FILE} ${SACCT_FILE}
+else
+   # Here we need to merge the job step data with the username information
+   echo "Running: ${SCUA_USERADD} ${SACCT_STEP_FILE} ${SACCT_JOB_FILE} ${SACCT_USER_FILE} ${SACCT_FILE}"
+   ${SCUA_USERADD} ${SACCT_STEP_FILE} ${SACCT_JOB_FILE} ${SACCT_USER_FILE} ${SACCT_FILE}
+fi
 
 if [ -z ${run_python} ]
 then
@@ -191,7 +213,7 @@ fi
 
 if [ -z "$keep_file" ] 
 then
-   rm ${SACCT_STEP_FILE} ${SACCT_USER_FILE} ${SACCT_JOB_FILE} ${SACCT_FILE}
+   rm ${SACCT_STEP_FILE} ${SACCT_USER_FILE} ${SACCT_JOB_FILE} ${SACCT_FILE} ${SACCT_STEP_GPU_FILE} ${SACCT_JOB_GPU_FILE}
 fi
 exit 0
 
