@@ -213,7 +213,12 @@ fi
 
 if [ -z "$keep_file" ] 
 then
-   rm ${SACCT_STEP_FILE} ${SACCT_USER_FILE} ${SACCT_JOB_FILE} ${SACCT_FILE} ${SACCT_STEP_GPU_FILE} ${SACCT_JOB_GPU_FILE}
+   if [ ${get_gpu} -eq 1 ]
+   then
+      rm ${SACCT_STEP_FILE} ${SACCT_USER_FILE} ${SACCT_JOB_FILE} ${SACCT_FILE} ${SACCT_STEP_GPU_FILE} ${SACCT_JOB_GPU_FILE}
+   else
+      rm ${SACCT_STEP_FILE} ${SACCT_USER_FILE} ${SACCT_JOB_FILE} ${SACCT_FILE}
+   fi
 fi
 exit 0
 
