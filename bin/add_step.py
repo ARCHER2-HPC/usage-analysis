@@ -1,4 +1,4 @@
-#!/usr//bin/env python
+#!/usr//bin/env python3
 #
 # This short script combines two outputs from sacct 
 # to add username details to Slurm job steps (the username

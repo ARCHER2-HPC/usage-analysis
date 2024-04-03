@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This script plots heatmaps of scheduling coefficients and usage using matplotlib
 # Input to the sript is from the SAFE Scehduling Coefficient report

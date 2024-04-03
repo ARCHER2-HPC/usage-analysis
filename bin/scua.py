@@ -1,4 +1,4 @@
-#!/usr//bin/env python
+#!/usr//bin/env python3
 # scua.py (Slurm Code Usage Analysis)
 #
 # usage: scua.py [options] filename
@@ -61,7 +61,7 @@ pd.options.mode.chained_assignment = None
 #=======================================================
 # Get overall statistics in a dataframe
 def getoverallstats(df, cu, en):
-    totcu = df['Nodeh'].sum()
+    totcu = df['Usage'].sum()
     percentcu = 100 * totcu / cu
     toten = df['Energy'].sum()
     percenten = 100 * toten / en
@@ -113,8 +113,9 @@ def reindex_df(df, weight_col):
 # Main code
 #=======================================================
 
-# Constants
+# Defaults
 CPN = 128          # Number of cores per node
+GPN = 4          # Number of GPUS per node
 MAX_POWER = 850    # Maximum per-node power draw to consider (in W) 
 
 unknown_thresh = 0.01
@@ -122,23 +123,30 @@ unknown_thresh = 0.01
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='Compute software usage data from Slurm output.')
 parser.add_argument('filename', type=str, nargs=1, help='Data file containing listing of Slurm jobs')
-parser.add_argument('--usersplit', dest='usersplit', action='store_true', default=False, help='Split unknown use by user')
-parser.add_argument('--anon', dest='anon', action='store_false', default=True, help='If splitting unknown use by user, anonymise usernames')
-parser.add_argument('--plots', dest='makeplots', action='store_true', default=False, help='Produce data plots')
-parser.add_argument('--csv', dest='savecsv', action='store_true', default=False, help='Produce data files in CSV')
-parser.add_argument('--md', dest='savemd', action='store_true', default=False, help='Produce data files in MD')
-parser.add_argument('--power', dest='analysepower', action='store_true', default=False, help='Produce node power usage distribution')
-parser.add_argument('--energy', dest='reportenergy', action='store_true', default=False, help='Report enery use in output. Note this is known to be inaccurate when just job steps are considered - consider using the scea tool instead to report energy use from jobs.')
-parser.add_argument('--motif', dest='analysemotif', action='store_true', default=False, help='Produce algorithmic motif usage distribution')
-parser.add_argument('--lang', dest='analyselang', action='store_true', default=False, help='Produce programming language usage distribution')
-parser.add_argument('--cpufreq', dest='analysecpufreq', action='store_true', default=False, help='Produce CPU frequency usage distribution')
-parser.add_argument('--dropnan', dest='dropnan', action='store_true', default=False, help='Drop all rows that contain NaN. Useful for strict comparisons between usage and energy use.')
-parser.add_argument('--prefix', dest='prefix', type=str, action='store', default='scua', help='Set the prefix to be used for output files')
-parser.add_argument('--projects', dest='projlist', type=str, action='store', default=None, help='The file containing a list of project IDs and associated research areas')
+parser.add_argument('-A', dest='account', type=str, action='store', nargs='?', default='', help='The slurm account specified for the report. Default: none')
+parser.add_argument('--anon', dest='anon', action='store_false', default=True, help='If splitting unknown use by user, anonymise usernames. Default: false')
+parser.add_argument('--cpn', dest='CPN', action='store', default=128, help='Set number of cores per node. Default: 128')
+parser.add_argument('--gpn', dest='GPN', action='store', default=4, help='Set number of GPUs per node. Only has an effect if --gpu is specified. Default: 4')
+parser.add_argument('--csv', dest='savecsv', action='store_true', default=False, help='Produce data files in CSV. Default: false')
+parser.add_argument('--cpufreq', dest='analysecpufreq', action='store_true', default=False, help='Produce CPU frequency usage distribution. Default: false')
+parser.add_argument('--dropnan', dest='dropnan', action='store_true', default=False, help='Drop all rows that contain NaN. Useful for strict comparisons between usage and energy use. Default: false')
+parser.add_argument('--energy', dest='reportenergy', action='store_true', default=False, help='Report enery use in output. Note this is known to be inaccurate when just job steps are considered - consider using the scea tool instead to report energy use from jobs. Default: false')
+parser.add_argument('--gpu', dest='usegpu', action='store_true', default=False, help='Read number of GPU used as part of input data and use nGPU and GPUh as the reporting unit')
+parser.add_argument('--lang', dest='analyselang', action='store_true', default=False, help='Produce programming language usage distribution. Default: false')
+parser.add_argument('--md', dest='savemd', action='store_true', default=False, help='Produce data files in MD. Default: false')
+parser.add_argument('--motif', dest='analysemotif', action='store_true', default=False, help='Produce algorithmic motif usage distribution. Default: false')
+parser.add_argument('--mpow', dest='MAX_POWER', action='store', default=850, help='Set maximum realistic power draw for a compute node (used to remove jobs with counter errors). Default: 850')
+parser.add_argument('--plots', dest='makeplots', action='store_true', default=False, help='Produce data plots. Default: false')
+parser.add_argument('--power', dest='analysepower', action='store_true', default=False, help='Produce node power usage distribution. Default: false')
+parser.add_argument('--prefix', dest='prefix', type=str, action='store', default='scua', help='Set the prefix to be used for output files. Default: scua')
+parser.add_argument('--projects', dest='projlist', type=str, action='store', default=None, help='The file containing a list of project IDs and associated research areas. Default: none')
+parser.add_argument('--sharednode', dest='sharednode', action='store_true', default=False, help='Can nodes be shared by jobs? Default: false')
 parser.add_argument('--thresh', dest='unknown_thresh', type=float, action='store', default=0.01, help='Usage fraction obove which unknown exe names are printed. Default is 0.01 - 1 percent.')
-parser.add_argument('-A', dest='account', type=str, action='store', nargs='?', default='', help='The slurm account specified for the report')
-parser.add_argument('-u', dest='user', type=str, action='store', nargs='?', default='', help='The user specified for the report')
+parser.add_argument('-u', dest='user', type=str, action='store', nargs='?', default='', help='The user specified for the report. Default: none')
+parser.add_argument('--units', dest='useunits', type=str, action='store', default='Nodeh', help='Units for calculating use: Nodeh or Coreh supported. Default is Nodeh')
+parser.add_argument('--usersplit', dest='usersplit', action='store_true', default=False, help='Split unknown use by user. Default: false')
 args = parser.parse_args()
+
 
 # Read any code definitions
 codeConfigDir = os.getenv('SCUA_BASE') + '/app-data/code-definitions'
@@ -167,7 +175,29 @@ if args.projlist is not None:
 
 # Read dataset (usually saved from Slurm)
 colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','CPUFreq','SubJobID']
-df = pd.read_csv(args.filename[0], names=colid, sep=',', engine='python', header=0)
+col_types = {
+        'JobID': 'str',
+        'ExeName': 'str',
+        'User': 'str',
+        'Account': 'str',
+        'Nodes': 'str',
+        'NTasks': 'str',
+        'Runtime': 'str',
+        'State': 'str',
+        'Energy': 'str',
+        'MaxRSS': 'str',
+        'MeanRSS': 'str',
+        'CPUFreq': 'str',
+        'SubJobID': 'str'
+        }
+
+if args.usegpu:
+   colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','CPUFreq','NGPUS','SubJobID']
+   col_types['NGPUS'] = 'str'
+   df = pd.read_csv(args.filename[0], names=colid, dtype=col_types, sep=',', engine='python', header=0)
+   df['NGPUS'] = pd.to_numeric(df['NGPUS'], errors='coerce')
+else:
+   df = pd.read_csv(args.filename[0], names=colid, dtype=col_types, sep=',', engine='python', header=0)
 # Count helps with number of jobs
 df['Count'] = 1
 
@@ -175,8 +205,11 @@ df['Count'] = 1
 cpufreq_set = set()
 cpufreq_set = df['CPUFreq'].unique()
 
-# Convert energy to numeric type
+# Convert columns to numeric type
 df['Energy'] = pd.to_numeric(df['Energy'], errors='coerce')
+df['Runtime'] = pd.to_numeric(df['Runtime'], errors='coerce')
+df['Nodes'] = pd.to_numeric(df['Nodes'], errors='coerce')
+df['NTasks'] = pd.to_numeric(df['NTasks'], errors='coerce')
 # Remove unrealistic values (presumably due to counter errors)
 df['Energy'].mask(df['Energy'].gt(1e16), inplace=True)
 df['NodePower'] = df['Energy'] / (df['Runtime'] * df['Nodes'])
@@ -195,7 +228,18 @@ df['Cores'] = df['NTasks']
 # Catch those cases where jobs are using SMT and recompute core count
 df.loc[df['cpn'] > CPN, 'Cores'] = df['Nodes'] * CPN
 
-# Calculate the number of Nodeh
+# Calculate the number of Nodeh/Coreh
+useunits = args.useunits
+if useunits == 'Nodeh':
+   df['Usage'] = df['Nodes'] * df['Runtime'] / 3600.0
+elif useunits == 'Coreh':
+   df['Usage'] = df['Cores'] * df['Runtime'] / 3600.0
+
+if args.usegpu:
+    useunits = 'GPUh'
+    df['Usage'] = df['NGPUS'] * df['Runtime'] / 3600.0
+
+if not args.sharednode:
 #   If the number of cores is less than a node then we need to get a 
 #   fractional node hour count and fractional energy
 #   Note: energy from Slurm is taken from node-level counters so if there 
@@ -203,10 +247,12 @@ df.loc[df['cpn'] > CPN, 'Cores'] = df['Nodes'] * CPN
 #     energy
 #   Note: the weakness here is if people are using less cores than a full
 #     node but are still using SMT. We will overcount the time for this case.
-df['Nodeh'] = df['Nodes'] * df['Runtime'] / 3600.0
-df.loc[df['Cores'] < CPN, 'Nodeh'] = df['Cores'] * df['Runtime'] / (CPN * 3600.0)
-df.loc[df['Cores'] < CPN, 'Energy'] = df['Cores'] * df['Energy'] / CPN 
-df.loc[df['Cores'] < CPN, 'NodePower'] = df['Cores'] * df['NodePower'] / CPN
+   if args.usegpu:
+      df.loc[df['NGPUS'] < GPN, 'Usage'] = df['NGPUS'] * df['Runtime'] / (GPN * 3600.0)
+   else:
+      df.loc[df['Cores'] < CPN, 'Usage'] = df['Cores'] * df['Runtime'] / (CPN * 3600.0)
+   df.loc[df['Cores'] < CPN, 'Energy'] = df['Cores'] * df['Energy'] / CPN 
+   df.loc[df['Cores'] < CPN, 'NodePower'] = df['Cores'] * df['NodePower'] / CPN
 
 # Remove very unrealistic values (presumably due to counter errors or very short runtimes)
 df.replace(np.inf, np.nan, inplace=True)
@@ -214,7 +260,7 @@ df['NodePower'].mask(df['NodePower'].gt(MAX_POWER), inplace=True)
 
 # Split Account column into ProjectID and GroupID
 df['JobID'] = df['JobID'].astype(str)
-df[['ProjectID','GroupID']] = df['Account'].str.split('-', 1, expand=True)
+df[['ProjectID','GroupID']] = df['Account'].str.split(pat='-', n=1, expand=True)
 
 # Identify the codes using regex from the code definitions
 df["Software"] = 'Unknown'
@@ -276,25 +322,24 @@ if args.usersplit:
 ######################################################################
 # Data quality checks
 #
-
-allcu = df['Nodeh'].sum()
+allcu = df['Usage'].sum()
 allen = df['Energy'].sum()
 
 # Software that are unidentified but have significant use
 mask = df['Software'].values == 'Unknown'
 df_code = df[mask]
-groupf = {'Nodeh':'sum', 'Count':'sum'}
+groupf = {'Usage':'sum', 'Count':'sum'}
 df_group = df_code.groupby(['ExeName']).agg(groupf)
-df_group.sort_values('Nodeh', inplace=True, ascending=False)
+df_group.sort_values('Usage', inplace=True, ascending=False)
 thresh = allcu * args.unknown_thresh
 print(f'\n## Unidentified executables with significant use (threashold = {args.unknown_thresh:.3f})\n')
-print(df_group.loc[df_group['Nodeh'] >= thresh].to_markdown(floatfmt=".1f"))
+print(df_group.loc[df_group['Usage'] >= thresh].to_markdown(floatfmt=".1f"))
 print()
 
 if args.usersplit:
     # Make sure we gather data on these executables, broken down by user
     df_group.reset_index()
-    unidentified_exe = df_group.loc[df_group['Nodeh'] >= thresh].index.to_list()
+    unidentified_exe = df_group.loc[df_group['Usage'] >= thresh].index.to_list()
     # We loop over the identified executables and append the anonymised username
     if args.anon:
         for exe in unidentified_exe:
@@ -305,30 +350,28 @@ if args.usersplit:
             df.loc[df['ExeName'] == exe, 'Software'] = exe
             df.loc[df['ExeName'] == exe, 'Software'] = df['Software'] + "_" + df['User']
 
+if args.analysepower:
+   # Check quality of energy data
+   #
+   nNaN = df['Energy'].isna().sum()
+   NaNUsage = df.loc[df['Energy'].isna(), 'Usage'].sum()
+   nRow = df.shape[0]
+   print('\n## Energy data quality check\n')
+   print(f'{"Number of subjobs =":>30s} {nRow:>10d}')
+   print(f'{"Subjobs missing energy =":>30s} {nNaN:>10d} ({100*nNaN/nRow:.2f}%)')
+   print(f'{"Usage missing energy =":>30s} {NaNUsage:>10.1f} {useunits} ({100*NaNUsage/allcu:.2f}%)\n')
 
-
-
-# Check quality of energy data
-#
-nNaN = df['Energy'].isna().sum()
-NaNUsage = df.loc[df['Energy'].isna(), 'Nodeh'].sum()
-nRow = df.shape[0]
-print('\n## Energy data quality check\n')
-print(f'{"Number of subjobs =":>30s} {nRow:>10d}')
-print(f'{"Subjobs missing energy =":>30s} {nNaN:>10d} ({100*nNaN/nRow:.2f}%)')
-print(f'{"Usage missing energy =":>30s} {NaNUsage:>10.1f} Nodeh ({100*NaNUsage/allcu:.2f}%)\n')
-
-# Check quality of node power data
-#
-nsmall = df['Cores'].lt(CPN).sum()
-coresusage = df.loc[df['Cores'].lt(CPN), 'Nodeh'].sum()
-energyusage = df.loc[df['Cores'].lt(CPN), 'Energy'].sum()
-nRow = df.shape[0]
-print('\n## Node power data quality check\n')
-print(f'{"Number of subjobs =":>30s} {nRow:>10d}')
-print(f'{"Subjobs excluded =":>30s} {nsmall:>10d} ({100*nsmall/nRow:.2f}%)')
-print(f'{"Usage excluded =":>30s} {coresusage:>10.1f} Nodeh ({100*coresusage/allcu:.2f}%)')
-print(f'{"Energy excluded =":>30s} {energyusage:>10.1f} kWh ({100*energyusage/allen:.2f}%)\n')
+   # Check quality of node power data
+   #
+   nsmall = df['Cores'].lt(CPN).sum()
+   coresusage = df.loc[df['Cores'].lt(CPN), 'Usage'].sum()
+   energyusage = df.loc[df['Cores'].lt(CPN), 'Energy'].sum()
+   nRow = df.shape[0]
+   print('\n## Node power data quality check\n')
+   print(f'{"Number of subjobs =":>30s} {nRow:>10d}')
+   print(f'{"Subjobs excluded =":>30s} {nsmall:>10d} ({100*nsmall/nRow:.2f}%)')
+   print(f'{"Usage excluded =":>30s} {coresusage:>10.1f} {useunits} ({100*coresusage/allcu:.2f}%)')
+   print(f'{"Energy excluded =":>30s} {energyusage:>10.1f} kWh ({100*energyusage/allen:.2f}%)\n')
 
 ######################################################################
 # Get the final list of software in the dataframe
@@ -355,7 +398,10 @@ outputs.append(category)
 title[category] = 'Software job size'
 category_list[category] = codelist
 category_col[category] = 'Software'
-analysis_col[category] = 'Cores'
+if args.usegpu:
+   analysis_col[category] = 'NGPUS'
+else:
+   analysis_col[category] = 'Cores'
 analyse_none[category] = True
 full_node[category] = False
 fullmatch[category] = True
@@ -376,7 +422,10 @@ if args.projlist is not None:
     title[category] = 'Research area job size'
     category_list[category] = areaset
     category_col[category] = 'Area'
-    analysis_col[category] = 'Cores'
+    if args.usegpu:
+       analysis_col[category] = 'NGPUS'
+    else:
+       analysis_col[category] = 'Cores'
     analyse_none[category] = False
     full_node[category] = False
     fullmatch[category] = True
@@ -396,7 +445,10 @@ if args.analysemotif:
     outputs.append(category)
     category_list[category] = motif_set
     category_col[category] = 'Motif'
-    analysis_col[category] = 'Cores'
+    if args.usegpu:
+       analysis_col[category] = 'NGPUS'
+    else:
+       analysis_col[category] = 'Cores'
     analyse_none[category] = False
     full_node[category] = False
     fullmatch[category] = False
@@ -416,7 +468,10 @@ if args.analyselang:
     outputs.append(category)
     category_list[category] = lang_set
     category_col[category] = 'Language'
-    analysis_col[category] = 'Cores'
+    if args.usegpu:
+       analysis_col[category] = 'NGPUS'
+    else:
+       analysis_col[category] = 'Cores'
     analyse_none[category] = False
     full_node[category] = False
     fullmatch[category] = True
@@ -436,7 +491,10 @@ if args.analysecpufreq:
     outputs.append(category)
     category_list[category] = cpufreq_set
     category_col[category] = 'CPUFreq'
-    analysis_col[category] = 'Cores'
+    if args.usegpu:
+       analysis_col[category] = 'NGPUS'
+    else:
+       analysis_col[category] = 'Cores'
     analyse_none[category] = True
     full_node[category] = False
     fullmatch[category] = True
@@ -459,7 +517,10 @@ for output in outputs:
     df_output = df
     # This restricts to full nodes if needed
     if full_node[output]:
-        mask = df['Cores'].ge(CPN)
+        if args.usegpu:
+           mask = df['GPUS'].ge(GPN)
+        else:
+           mask = df['Cores'].ge(CPN)
         df_output = df[mask]
 
     job_stats = []
@@ -475,7 +536,7 @@ for output in outputs:
             mask = df_output[catcol].str.contains(re.escape(str(category)), na=False)
         df_cat = df_output[mask]
         if not df_cat.empty:
-            dist, wdist = distribution(df_cat, category, allcu, allen, ancol, 'Nodeh')
+            dist, wdist = distribution(df_cat, category, allcu, allen, ancol, 'Usage')
             job_stats.append(dist)
             usage_stats.append(wdist)
 
@@ -484,18 +545,18 @@ for output in outputs:
         mask = df_output[catcol].values == None
         df_cat = df_output[mask]
         if not df_cat.empty:
-            dist, wdist = distribution(df_cat, 'Unidentified', allcu, allen, ancol, 'Nodeh')
+            dist, wdist = distribution(df_cat, 'Unidentified', allcu, allen, ancol, 'Usage')
             job_stats.append(dist)
             usage_stats.append(wdist)
 
     # Get overall data for all jobs
-    dist, wdist = distribution(df_output, 'Overall', allcu, allen, ancol, 'Nodeh')
+    dist, wdist = distribution(df_output, 'Overall', allcu, allen, ancol, 'Usage')
     job_stats.append(dist)
     usage_stats.append(wdist)
 
     # Save the output
     print(f'\n## {title[output]} distribution: weighted by usage\n')
-    df_usage = pd.DataFrame(usage_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy', 'Users', 'Projects'])
+    df_usage = pd.DataFrame(usage_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', useunits, 'PercentUse', 'kWh', 'PercentEnergy', 'Users', 'Projects'])
     if not args.reportenergy:
         df_usage.drop('kWh', axis=1, inplace=True)
         df_usage.drop('PercentEnergy', axis=1, inplace=True)
@@ -503,7 +564,7 @@ for output in outputs:
     print(df_usage.to_markdown(index=False, floatfmt=".1f"))
     print()
     print(f'\n## {title[output]} distribution: by number of jobs\n')
-    df_jobs = pd.DataFrame(job_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy', 'Users', 'Projects'])
+    df_jobs = pd.DataFrame(job_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', useunits, 'PercentUse', 'kWh', 'PercentEnergy', 'Users', 'Projects'])
     if not args.reportenergy:
         df_jobs.drop('kWh', axis=1, inplace=True)
         df_jobs.drop('PercentEnergy', axis=1, inplace=True)
@@ -531,7 +592,10 @@ if args.makeplots:
     categories = codelist
     # The category column and analysis columns
     catcol = 'Software'
-    ancol = 'Cores'
+    if args.usegpu:
+       ancol = 'NGPUS'
+    else:
+       ancol = 'Cores'
     for category in categories:
         if fullmatch[output]:
             mask = df_output[catcol].str.fullmatch(re.escape(str(category)), na=False)
@@ -539,24 +603,24 @@ if args.makeplots:
             mask = df_output[catcol].str.contains(re.escape(str(category)), na=False)
         df_cat = df_output[mask]
         if not df_cat.empty:
-            dist, wdist = distribution(df_cat, category, allcu, allen, ancol, 'Nodeh')
+            dist, wdist = distribution(df_cat, category, allcu, allen, ancol, 'Usage')
             job_stats.append(dist)
             usage_stats.append(wdist)
 
     mask = df_output[catcol].values == None
     df_cat = df_output[mask]
     if not df_cat.empty:
-        dist, wdist = distribution(df_cat, 'Unidentified', allcu, allen, ancol, 'Nodeh')
+        dist, wdist = distribution(df_cat, 'Unidentified', allcu, allen, ancol, 'Usage')
         job_stats.append(dist)
         usage_stats.append(wdist)
 
     # Get overall data for all jobs
-    dist, wdist = distribution(df_output, 'Overall', allcu, allen, ancol, 'Nodeh')
+    dist, wdist = distribution(df_output, 'Overall', allcu, allen, ancol, 'Usage')
     job_stats.append(dist)
     usage_stats.append(wdist)
 
     # Save the output
-    df_usage = pd.DataFrame(usage_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', 'Nodeh', 'PercentUse', 'kWh', 'PercentEnergy', 'Users', 'Projects'])
+    df_usage = pd.DataFrame(usage_stats, columns=[catcol, 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Jobs', useunits, 'PercentUse', 'kWh', 'PercentEnergy', 'Users', 'Projects'])
     df_usage.sort_values('PercentUse', inplace=True, ascending=False)
 
     # Software usage plots
@@ -573,9 +637,13 @@ if args.makeplots:
     topcodes = df_usage['Software'].head(16).to_list()[1:]
     df_topcodes = df[df['Software'].isin(topcodes)]
     plt.figure(figsize=[8,6])
+    if args.usegpu:
+        xcat = 'NGPUS'
+    else:
+        xcat = 'Cores'
     sns.boxplot(
         y="Software",
-        x="Cores",
+        x=xcat,
         orient='h',
         color='lightseagreen',
         order=topcodes,
@@ -586,9 +654,9 @@ if args.makeplots:
             "markeredgecolor":"black",
             "markersize":"5"
             },
-        data=reindex_df(df_topcodes, weight_col='Nodeh')
+        data=reindex_df(df_topcodes, weight_col=useunits)
         )
-    plt.xlabel('Cores')
+    plt.xlabel(xcat)
     sns.despine()
     plt.tight_layout()
     plt.savefig(f'{args.prefix}_top15_boxplot.png', dpi=300)

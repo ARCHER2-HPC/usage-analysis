@@ -1,4 +1,4 @@
-#!/usr//bin/env python
+#!/usr//bin/env python3
 # scea.py (Slurm Code Energy Analysis)
 #
 # usage: scea.py [options] filename

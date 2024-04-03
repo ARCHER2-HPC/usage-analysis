@@ -31,13 +31,45 @@ import pandas as pd
 import sys
 import csv
 
-# Read job steps
+def getngpu(x):
+    tokens = x.split('=')
+    return tokens[1]
+
+###################################
+# Add number of GPUs to job steps
 colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','CPUFreq']
 df_step = pd.read_csv(sys.argv[1], names=colid, sep='::', engine='python')
-# Read top level jobs
+colid = ['JobID','State','AllocCPU','AllocGPU','AllocMem','AllocNode']
+df_gstep = pd.read_csv(sys.argv[2], names=colid, sep=',', engine='python')
+df_gstep.drop(['State','AllocCPU','AllocMem','AllocNode'], axis=1, inplace=True)
+
+df_gstep['AllocGPU'] = df_gstep['AllocGPU'].astype(str)
+df_gstep['NGPUS'] = df_gstep['AllocGPU'].map(getngpu)
+
+df_step.sort_values('JobID', inplace=True)
+df_gstep.sort_values('JobID', inplace=True)
+
+df_step['NGPUS'] = df_gstep['NGPUS']
+
+###################################
+# Add number of GPUs to jobs
 colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','CPUFreq']
-df_job = pd.read_csv(sys.argv[2], names=colid, sep='::', engine='python')
-# Make an identifiable executable for top level jobs (where we do not know the exe)
+df_job = pd.read_csv(sys.argv[3], names=colid, sep='::', engine='python')
+colid = ['JobID','State','Billing','AllocCPU','Energy','AllocGPU','AllocMem','AllocNode']
+df_gjob = pd.read_csv(sys.argv[4], names=colid, sep=',', engine='python')
+df_gjob.drop(['State','Billing','AllocCPU','Energy','AllocMem','AllocNode'], axis=1, inplace=True)
+df_gjob = df_gjob.replace(to_replace='None', value=np.nan).dropna()
+df_gjob = df_gjob.loc[df_gjob['AllocGPU'].str.contains('gpu')]
+df_gjob['AllocGPU'] = df_gjob['AllocGPU'].astype(str)
+df_gjob['NGPUS'] = df_gjob['AllocGPU'].map(getngpu)
+
+df_job.sort_values('JobID', inplace=True)
+df_gjob.sort_values('JobID', inplace=True)
+
+df_job['NGPUS'] = df_gjob['NGPUS']
+
+##################################
+# Extra settings for jobs
 df_job['ExeName'] = 'no_srun'
 df_job['SubJobID'] = 0
 
@@ -64,4 +96,5 @@ for row in reader:
 # Map the username by matching job id
 df['User'] = df['JobID'].map(userdict)
 
-df.to_csv(sys.argv[4], index=False)
+df.to_csv(sys.argv[6], index=False)
+
