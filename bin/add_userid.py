@@ -31,10 +31,13 @@ import pandas as pd
 import sys
 import csv
 
+# Read job steps
 colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','CPUFreq']
 df_step = pd.read_csv(sys.argv[1], names=colid, sep='::', engine='python')
+# Read top level jobs
 colid = ['JobID','ExeName','User','Account','Nodes','NTasks','Runtime','State','Energy','MaxRSS','MeanRSS','CPUFreq']
 df_job = pd.read_csv(sys.argv[2], names=colid, sep='::', engine='python')
+# Make an identifiable executable for top level jobs (where we do not know the exe)
 df_job['ExeName'] = 'no_srun'
 df_job['SubJobID'] = 0
 
@@ -43,8 +46,9 @@ df_step[['JobID','SubJobID']] = df_step['JobID'].str.split(pat='.', n=1, expand=
 
 # Remove just the last duplicated job ID
 #  If there are duplicates, the last one corresponds to the top level job
-df = pd.concat([df_step, df_job])
-m1 = df.duplicated(['JobID'], keep='last')
+df = pd.concat([df_step, df_job], ignore_index=True)
+df['JobID'] = df['JobID'].astype(int)
+m1 = df['JobID'].duplicated(keep='last')
 m2 = ~df.duplicated(['JobID'], keep=False)
 df = df[m1|m2]
 
@@ -55,7 +59,7 @@ next(userfile)  # Skip header
 reader = csv.reader(userfile, skipinitialspace=True)
 for row in reader:
     if (len(row) > 1):
-        userdict[row[0]] = row[1]
+        userdict[int(row[0])] = row[1]
 
 # Map the username by matching job id
 df['User'] = df['JobID'].map(userdict)

@@ -181,8 +181,12 @@ sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_JOB_BASE_OPTS} | egrep -v "$
 # Run to get the user ID associated with the jobs
 sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_USER_BASE_OPTS} | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_USER_FILE}
 
-if [ ${get_gpu} -eq 1 ]
+if [ -z ${get_gpu} ]
 then
+   # Here we need to merge the job step data with the username information
+   echo "Running: ${SCUA_USERADD} ${SACCT_STEP_FILE} ${SACCT_JOB_FILE} ${SACCT_USER_FILE} ${SACCT_FILE}"
+   ${SCUA_USERADD} ${SACCT_STEP_FILE} ${SACCT_JOB_FILE} ${SACCT_USER_FILE} ${SACCT_FILE}
+else
    # Extract number of GPUS per job and add userids 
    echo "Running: sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_STEP_GPU_OPTS} | egrep '^[0-9]+\.[0-9]' | egrep -v \"${SACCT_EXCLUDE_STATES}\""
    sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_STEP_GPU_OPTS} | egrep '^[0-9]+\.[0-9]' | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_STEP_GPU_FILE}
@@ -190,10 +194,6 @@ then
    sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_JOB_GPU_OPTS} | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_JOB_GPU_FILE}
    echo "Running: ${SCUA_GPUADD} ${SACCT_STEP_FILE} ${SACCT_STEP_GPU_FILE} ${SACCT_JOB_FILE} ${SACCT_JOB_GPU_FILE} ${SACCT_USER_FILE} ${SACCT_FILE}"
    ${SCUA_GPUADD} ${SACCT_STEP_FILE} ${SACCT_STEP_GPU_FILE} ${SACCT_JOB_FILE} ${SACCT_JOB_GPU_FILE} ${SACCT_USER_FILE} ${SACCT_FILE}
-else
-   # Here we need to merge the job step data with the username information
-   echo "Running: ${SCUA_USERADD} ${SACCT_STEP_FILE} ${SACCT_JOB_FILE} ${SACCT_USER_FILE} ${SACCT_FILE}"
-   ${SCUA_USERADD} ${SACCT_STEP_FILE} ${SACCT_JOB_FILE} ${SACCT_USER_FILE} ${SACCT_FILE}
 fi
 
 if [ -z ${run_python} ]
@@ -213,11 +213,11 @@ fi
 
 if [ -z "$keep_file" ] 
 then
-   if [ ${get_gpu} -eq 1 ]
+   if [ -z ${get_gpu} ]
    then
-      rm ${SACCT_STEP_FILE} ${SACCT_USER_FILE} ${SACCT_JOB_FILE} ${SACCT_FILE} ${SACCT_STEP_GPU_FILE} ${SACCT_JOB_GPU_FILE}
-   else
       rm ${SACCT_STEP_FILE} ${SACCT_USER_FILE} ${SACCT_JOB_FILE} ${SACCT_FILE}
+   else
+      rm ${SACCT_STEP_FILE} ${SACCT_USER_FILE} ${SACCT_JOB_FILE} ${SACCT_FILE} ${SACCT_STEP_GPU_FILE} ${SACCT_JOB_GPU_FILE}
    fi
 fi
 exit 0
