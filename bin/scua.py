@@ -140,6 +140,7 @@ parser.add_argument('--plots', dest='makeplots', action='store_true', default=Fa
 parser.add_argument('--power', dest='analysepower', action='store_true', default=False, help='Produce node power usage distribution. Default: false')
 parser.add_argument('--prefix', dest='prefix', type=str, action='store', default='scua', help='Set the prefix to be used for output files. Default: scua')
 parser.add_argument('--projects', dest='projlist', type=str, action='store', default=None, help='The file containing a list of project IDs and associated research areas. Default: none')
+parser.add_argument('--projid', dest='analyseprojid', action='store_true', default=False, help='Produce project ID usage distribution. Default: false')
 parser.add_argument('--sharednode', dest='sharednode', action='store_true', default=False, help='Can nodes be shared by jobs? Default: false')
 parser.add_argument('--thresh', dest='unknown_thresh', type=float, action='store', default=0.01, help='Usage fraction obove which unknown exe names are printed. Default is 0.01 - 1 percent.')
 parser.add_argument('-u', dest='user', type=str, action='store', nargs='?', default='', help='The user specified for the report. Default: none')
@@ -254,6 +255,10 @@ if not args.sharednode:
    df.loc[df['Cores'] < CPN, 'Energy'] = df['Cores'] * df['Energy'] / CPN 
    df.loc[df['Cores'] < CPN, 'NodePower'] = df['Cores'] * df['NodePower'] / CPN
 
+# Remove unrealistic values
+df.loc[df['Usage'] < 0, 'Usage'] = 0.0
+
+
 # Remove very unrealistic values (presumably due to counter errors or very short runtimes)
 df.replace(np.inf, np.nan, inplace=True)
 df['NodePower'].mask(df['NodePower'].gt(MAX_POWER), inplace=True)
@@ -261,6 +266,7 @@ df['NodePower'].mask(df['NodePower'].gt(MAX_POWER), inplace=True)
 # Split Account column into ProjectID and GroupID
 df['JobID'] = df['JobID'].astype(str)
 df[['ProjectID','GroupID']] = df['Account'].str.split(pat='-', n=1, expand=True)
+projidlist = df['ProjectID'].unique()
 
 # Identify the codes using regex from the code definitions
 df["Software"] = 'Unknown'
@@ -427,6 +433,19 @@ if args.projlist is not None:
     else:
        analysis_col[category] = 'Cores'
     analyse_none[category] = False
+    full_node[category] = False
+    fullmatch[category] = True
+if args.analyseprojid is not None:
+    category = 'ProjSize'
+    outputs.append(category)
+    title[category] = 'Project ID job size'
+    category_list[category] = projidlist
+    category_col[category] = 'ProjectID'
+    if args.usegpu:
+       analysis_col[category] = 'NGPUS'
+    else:
+       analysis_col[category] = 'Cores'
+    analyse_none[category] = True
     full_node[category] = False
     fullmatch[category] = True
 if args.analysepower and args.projlist is not None:
@@ -654,7 +673,7 @@ if args.makeplots:
             "markeredgecolor":"black",
             "markersize":"5"
             },
-        data=reindex_df(df_topcodes, weight_col=useunits)
+        data=reindex_df(df_topcodes, weight_col='Usage')
         )
     plt.xlabel(xcat)
     sns.despine()

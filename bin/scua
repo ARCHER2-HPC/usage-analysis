@@ -56,7 +56,7 @@ get_gpu=""
 run_python=1
 python_opts=""
 prefix="scua"
-while getopts ":a:bA:E:fgcmhkno:p:q:r:sS:tu:wxX:" opt; do
+while getopts ":a:bA:E:fgicmhkno:p:q:r:sS:tu:wxX:" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} --group=${OPTARG}"
@@ -73,6 +73,7 @@ while getopts ":a:bA:E:fgcmhkno:p:q:r:sS:tu:wxX:" opt; do
       echo " -E date/time    End date/time as YYYY-MM-DDTHH:MM, e.g. 2021-02-01T00:00"
       echo " -f              Perform analysis of CPU frequency use"
       echo " -g              Perform analysis of GPU use"
+      echo " -i              Perform analysis by project ID"
       echo " -l              Perform analysis of programming language use"
       echo " -k              Keeps the intermediate output from sacct in <prefix>_sacct.dat and <prefix>_sacct_users.dat"
       echo " -n              Do not run Python analysis - just produce data file"
@@ -116,6 +117,9 @@ while getopts ":a:bA:E:fgcmhkno:p:q:r:sS:tu:wxX:" opt; do
     g )
       get_gpu=1
       python_opts="${python_opts} --gpu"
+      ;;
+    i )
+      python_opts="${python_opts} --projid"
       ;;
     c )
       python_opts="${python_opts} --csv"
