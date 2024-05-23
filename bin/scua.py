@@ -264,8 +264,13 @@ df.replace(np.inf, np.nan, inplace=True)
 df['NodePower'].mask(df['NodePower'].gt(MAX_POWER), inplace=True)
 
 # Split Account column into ProjectID and GroupID
+#    Need to be careful, if there are no subbudgets we cannot split
 df['JobID'] = df['JobID'].astype(str)
-df[['ProjectID','GroupID']] = df['Account'].str.split(pat='-', n=1, expand=True)
+if df['Account'].str.contains('-').sum() > 0:
+   df[['ProjectID','GroupID']] = df['Account'].str.split(pat='-', n=1, expand=True)
+else:
+   df['ProjectID'] = df['Account']
+   df['GroupID'] = None
 projidlist = df['ProjectID'].unique()
 
 # Identify the codes using regex from the code definitions
@@ -435,7 +440,7 @@ if args.projlist is not None:
     analyse_none[category] = False
     full_node[category] = False
     fullmatch[category] = True
-if args.analyseprojid is not None:
+if args.analyseprojid:
     category = 'ProjSize'
     outputs.append(category)
     title[category] = 'Project ID job size'
