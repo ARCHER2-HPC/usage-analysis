@@ -112,6 +112,7 @@ while getopts ":a:A:E:fgcmhknp:sS:tu:wx:" opt; do
       ;;
     u )
       extra_opts="${extra_opts} -u ${OPTARG}"
+      SET_USER=1
       ;;
     w )
       python_opts="${python_opts} --power"
@@ -133,7 +134,12 @@ shift $((OPTIND -1))
 
 SACCT_OUTPUT_FILE="${prefix}_sacct.dat"
 SACCT_STEP_FILE="${prefix}_sacct_step.dat"
-extra_opts="${extra_opts} -a -n"
+if [ -z ${SET_USER} ]
+then
+  extra_opts="${extra_opts} -a -n"
+else
+  extra_opts="${extra_opts} -n"
+fi
 echo "Running: sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_PARTITIONS} ${SACCT_BASE_OPTS} | egrep -v \"${SACCT_EXCLUDE_STATES}\""
 sacct ${startdate} ${enddate} ${extra_opts} ${SACCT_PARTITIONS} ${SACCT_BASE_OPTS} | egrep -v "${SACCT_EXCLUDE_STATES}" > ${SACCT_OUTPUT_FILE}
 # Run to get the first job step associated with the jobs

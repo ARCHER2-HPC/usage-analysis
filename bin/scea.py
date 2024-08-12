@@ -181,7 +181,12 @@ df['NodePower'].mask(df['NodePower'].gt(MAX_POWER), inplace=True)
 
 # Split Account column into ProjectID and GroupID
 df['JobID'] = df['JobID'].astype(str)
-df[['ProjectID','GroupID']] = df['Account'].str.split('-', 1, expand=True)
+df['JobID'] = df['JobID'].astype(str)
+if df['Account'].str.contains('-').sum() > 0:
+   df[['ProjectID','GroupID']] = df['Account'].str.split(pat='-', n=1, expand=True)
+else:
+   df['ProjectID'] = df['Account']
+   df['GroupID'] = None
 
 # Identify the codes using regex from the code definitions
 df["Software"] = None
