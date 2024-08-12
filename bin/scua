@@ -49,7 +49,7 @@ keep_file=""
 run_python=1
 python_opts=""
 prefix="scua"
-while getopts ":a:A:E:fgcmhknp:sS:tu:wx:" opt; do
+while getopts ":a:A:E:fgcmhknp:q:sS:tu:wx:" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} --group=${OPTARG}"
@@ -107,6 +107,9 @@ while getopts ":a:A:E:fgcmhknp:sS:tu:wx:" opt; do
     p )
       python_opts="${python_opts} --prefix=${OPTARG}"
       prefix=${OPTARG}
+      ;;
+    q )
+      extra_opts="${extra_opts} --qos=${OPTARG}"
       ;;
     s )
       python_opts="${python_opts} --usersplit"

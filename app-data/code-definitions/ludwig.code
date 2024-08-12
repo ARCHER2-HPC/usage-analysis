@@ -20,7 +20,7 @@
 
 [code info]
 name: ludwig
-regexp: ludwig.exe
+regexp: ludwig.exe|Ludwig.exe
 
 [metadata]
 primary language: C

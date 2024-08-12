@@ -19,16 +19,17 @@
 #
 
 [code info]
-name: FEniCS
-regexp: demo_stokes-t|ffc|dolfinx
+name: VAMPIRE
+regexp: vampire
 
 [metadata]
-primary language: C++
-version:          
+primary language: Fortran
+version:          95
 
-academic license: GPL
-commercial license: GPL
+academic license: Open Source
+commercial license: Open Source
 
-code type: UnstructuredGrid
-research area: Structural Engineering
-parallel-model: MPI
+code type: DenseLinearAlgebra MonteCarlo
+
+research area: Materials Science
+parallel-model: MPI+OpenMP

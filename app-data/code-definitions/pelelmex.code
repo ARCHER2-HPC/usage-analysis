@@ -19,16 +19,17 @@
 #
 
 [code info]
-name: FEniCS
-regexp: demo_stokes-t|ffc|dolfinx
+name: PeleLMeX
+regexp: PeleLMeX
 
 [metadata]
 primary language: C++
 version:          
 
-academic license: GPL
-commercial license: GPL
+academic license: Open Source
+commercial license: Open Source
 
-code type: UnstructuredGrid
-research area: Structural Engineering
-parallel-model: MPI
+code type: StructuredGrid
+
+research area: Combustion Modelling
+parallel-model: MPI+OpenMP
