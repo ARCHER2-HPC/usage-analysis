@@ -56,7 +56,7 @@ get_gpu=""
 run_python=1
 python_opts=""
 prefix="scua"
-while getopts ":a:bA:E:fgicmhkno:p:q:r:sS:tu:wxX:" opt; do
+while getopts ":a:bA:E:fgilcmhkno:p:q:r:sS:tu:wxX:" opt; do
   case ${opt} in
     A )
       extra_opts="${extra_opts} --group=${OPTARG}"
