@@ -20,7 +20,7 @@
 
 [code info]
 name: HYDRA
-regexp: jm51|hyd-|hydra|hyd.par
+regexp: jm51|hyd-|hydra|hyd.par|jm76*
 
 [metadata]
 primary language: Fortran
