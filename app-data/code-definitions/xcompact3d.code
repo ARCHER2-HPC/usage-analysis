@@ -20,7 +20,7 @@
 
 [code info]
 name: Xcompact3d
-regexp: xcompact3d
+regexp: xcompact3d|xcompact
 
 [metadata]
 primary language: Fortran
