@@ -1,0 +1,22 @@
+# CPU frequency distribution analysis categories
+
+[[analyses]]
+id = "CPUFreqSize"
+title = "CPU frequency job size"
+category_column = "CPUFreq"
+analysis_column_core = "Cores"
+analysis_column_gpu = "NGPUS"
+analyse_none = true
+full_node = false
+fullmatch = true
+required_flag = "analysecpufreq"
+
+[[analyses]]
+id = "CPUFreqPower"
+title = "CPU frequency node power use"
+category_column = "CPUFreq"
+analysis_column = "NodePower"
+analyse_none = true
+full_node = true
+fullmatch = true
+required_flag = ["analysecpufreq", "analysepower"]

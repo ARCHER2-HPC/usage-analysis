@@ -1,0 +1,22 @@
+# Research area distribution analysis categories
+
+[[analyses]]
+id = "AreaSize"
+title = "Research area job size"
+category_column = "Area"
+analysis_column_core = "Cores"
+analysis_column_gpu = "NGPUS"
+analyse_none = false
+full_node = false
+fullmatch = true
+required_flag = ["projlist"]
+
+[[analyses]]
+id = "AreaPower"
+title = "Research area node power use"
+category_column = "Area"
+analysis_column = "NodePower"
+analyse_none = false
+full_node = true
+fullmatch = true
+required_flag = ["analysepower", "projlist"]

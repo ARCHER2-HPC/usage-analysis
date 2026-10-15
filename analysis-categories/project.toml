@@ -1,0 +1,12 @@
+# Project ID distribution analysis categories
+
+[[analyses]]
+id = "ProjSize"
+title = "Project ID job size"
+category_column = "ProjectID"
+analysis_column_core = "Cores"
+analysis_column_gpu = "NGPUS"
+analyse_none = true
+full_node = false
+fullmatch = true
+required_flag = "analyseprojid"

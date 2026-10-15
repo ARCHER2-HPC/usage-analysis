@@ -1,0 +1,22 @@
+# Algorithmic motif distribution analysis categories
+
+[[analyses]]
+id = "MotifSize"
+title = "Algorithmic motifs job size"
+category_column = "Motif"
+analysis_column_core = "Cores"
+analysis_column_gpu = "NGPUS"
+analyse_none = false
+full_node = false
+fullmatch = false
+required_flag = "analysemotif"
+
+[[analyses]]
+id = "MotifPower"
+title = "Algorithmic motifs node power use"
+category_column = "Motif"
+analysis_column = "NodePower"
+analyse_none = false
+full_node = true
+fullmatch = false
+required_flag = ["analysemotif", "analysepower"]

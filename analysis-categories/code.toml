@@ -1,0 +1,21 @@
+# Code distribution analysis categories
+
+[[analyses]]
+id = "CodeSize"
+title = "Software job size"
+category_column = "Software"
+analysis_column_core = "Cores"
+analysis_column_gpu = "NGPUS"
+analyse_none = true
+full_node = false
+fullmatch = true
+
+[[analyses]]
+id = "CodePower"
+title = "Software node power use"
+category_column = "Software"
+analysis_column = "NodePower"
+analyse_none = true
+full_node = true
+fullmatch = true
+required_flag = "analysepower"

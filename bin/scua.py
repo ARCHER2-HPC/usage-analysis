@@ -55,6 +55,16 @@ import re
 import sys
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+# TOML support (Python 3.11+ has tomllib built-in)
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    try:
+        import toml as tomllib
+    except ImportError:
+        print("Error: tomllib (Python 3.11+) or toml package is required.", file=sys.stderr)
+        sys.exit(1)
+
 # Third-party imports
 import numpy as np
 import pandas as pd
@@ -641,6 +651,60 @@ def generate_plots(
     plt.clf()
 
 
+def load_analysis_categories(base_dir: str) -> Dict[str, Dict[str, Any]]:
+    """Load analysis category definitions from TOML files.
+    
+    Args:
+        base_dir: Base directory containing analysis-categories subdirectory
+        
+    Returns:
+        Dictionary mapping category IDs to their definitions
+    """
+    categories_dir = os.path.join(base_dir, 'analysis-categories')
+    all_categories = {}
+    
+    for filename in os.listdir(categories_dir):
+        if filename.endswith('.toml'):
+            filepath = os.path.join(categories_dir, filename)
+            with open(filepath, 'rb') as f:
+                data = tomllib.load(f)
+            
+            for analysis in data.get('analyses', []):
+                all_categories[analysis['id']] = analysis
+    
+    return all_categories
+
+
+def filter_categories_by_flags(
+    categories: Dict[str, Dict[str, Any]],
+    args: argparse.Namespace
+) -> List[str]:
+    """Filter analysis categories based on command-line flags.
+    
+    Args:
+        categories: All available category definitions
+        args: Parsed command-line arguments
+        
+    Returns:
+        List of category IDs to include
+    """
+    outputs = []
+    
+    for cat_id, config in categories.items():
+        required_flag = config.get('required_flag')
+        
+        if required_flag is None:
+            outputs.append(cat_id)
+        elif isinstance(required_flag, str):
+            if getattr(args, required_flag, False):
+                outputs.append(cat_id)
+        elif isinstance(required_flag, list):
+            if all(getattr(args, flag, False) for flag in required_flag):
+                outputs.append(cat_id)
+    
+    return outputs
+
+
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments.
     
@@ -857,8 +921,20 @@ def main() -> int:
     codelist = df['Software'].unique()
     codelist = list(filter(lambda item: item is not None, codelist))
     
-    # Define the distribution analyses to perform
-    outputs = []
+    # Get CPUFreq set from the column (needed for CPU frequency analysis)
+    cpufreq_set = set(df['CPUFreq'].unique())
+    
+    # Load analysis category definitions from TOML files
+    try:
+        all_categories = load_analysis_categories(scua_base)
+    except Exception as e:
+        print(f"Error loading analysis categories: {e}", file=sys.stderr)
+        return 1
+    
+    # Filter categories based on command-line flags
+    outputs = filter_categories_by_flags(all_categories, args)
+    
+    # Build category configuration dictionaries for analyze_category()
     title = {}
     category_list = {}
     category_col = {}
@@ -867,148 +943,36 @@ def main() -> int:
     full_node = {}
     fullmatch = {}
     
-    # Job size distribution for software is always computed
-    category = 'CodeSize'
-    outputs.append(category)
-    title[category] = 'Software job size'
-    category_list[category] = codelist
-    category_col[category] = 'Software'
-    if args.usegpu:
-        analysis_col[category] = 'NGPUS'
-    else:
-        analysis_col[category] = 'Cores'
-    analyse_none[category] = True
-    full_node[category] = False
-    fullmatch[category] = True
-    
-    # Optional categories
-    if args.analysepower:
-        category = 'CodePower'
-        title[category] = 'Software node power use'
-        outputs.append(category)
-        category_list[category] = codelist
-        category_col[category] = 'Software'
-        analysis_col[category] = 'NodePower'
-        analyse_none[category] = True
-        full_node[category] = True
-        fullmatch[category] = True
-    
-    if args.projlist is not None:
-        category = 'AreaSize'
-        outputs.append(category)
-        title[category] = 'Research area job size'
-        category_list[category] = areaset
-        category_col[category] = 'Area'
-        if args.usegpu:
-            analysis_col[category] = 'NGPUS'
-        else:
-            analysis_col[category] = 'Cores'
-        analyse_none[category] = False
-        full_node[category] = False
-        fullmatch[category] = True
-    
-    if args.analysepower and args.projlist is not None:
-        category = 'AreaPower'
-        title[category] = 'Research area node power use'
-        outputs.append(category)
-        category_list[category] = areaset
-        category_col[category] = 'Area'
-        analysis_col[category] = 'NodePower'
-        analyse_none[category] = False
-        full_node[category] = True
-        fullmatch[category] = True
-    
-    if args.analyseprojid:
-        category = 'ProjSize'
-        outputs.append(category)
-        title[category] = 'Project ID job size'
-        category_list[category] = projidlist
-        category_col[category] = 'ProjectID'
-        if args.usegpu:
-            analysis_col[category] = 'NGPUS'
-        else:
-            analysis_col[category] = 'Cores'
-        analyse_none[category] = True
-        full_node[category] = False
-        fullmatch[category] = True
-    
-    if args.analysemotif:
-        category = 'MotifSize'
-        title[category] = 'Algorithmic motifs job size'
-        outputs.append(category)
-        category_list[category] = motif_set
-        category_col[category] = 'Motif'
-        if args.usegpu:
-            analysis_col[category] = 'NGPUS'
-        else:
-            analysis_col[category] = 'Cores'
-        analyse_none[category] = False
-        full_node[category] = False
-        fullmatch[category] = False
-    
-    if args.analysemotif and args.analysepower:
-        category = 'MotifPower'
-        title[category] = 'Algorithmic motifs node power use'
-        outputs.append(category)
-        category_list[category] = motif_set
-        category_col[category] = 'Motif'
-        analysis_col[category] = 'NodePower'
-        analyse_none[category] = False
-        full_node[category] = True
-        fullmatch[category] = False
-    
-    if args.analyselang:
-        category = 'LangSize'
-        title[category] = 'Programming language job size'
-        outputs.append(category)
-        category_list[category] = lang_set
-        category_col[category] = 'Language'
-        if args.usegpu:
-            analysis_col[category] = 'NGPUS'
-        else:
-            analysis_col[category] = 'Cores'
-        analyse_none[category] = False
-        full_node[category] = False
-        fullmatch[category] = True
-    
-    if args.analyselang and args.analysepower:
-        category = 'LangPower'
-        title[category] = 'Programming language node power use'
-        outputs.append(category)
-        category_list[category] = lang_set
-        category_col[category] = 'Language'
-        analysis_col[category] = 'NodePower'
-        analyse_none[category] = False
-        full_node[category] = True
-        fullmatch[category] = True
-    
-    # Get CPUFreq set from the column (needed for CPU frequency analysis)
-    cpufreq_set = set(df['CPUFreq'].unique())
-    
-    if args.analysecpufreq:
-        category = 'CPUFreqSize'
-        title[category] = 'CPU frequency job size'
-        outputs.append(category)
-        category_list[category] = cpufreq_set
-        category_col[category] = 'CPUFreq'
-        if args.usegpu:
-            analysis_col[category] = 'NGPUS'
-        else:
-            analysis_col[category] = 'Cores'
-        analyse_none[category] = True
-        full_node[category] = False
-        fullmatch[category] = True
-    
-    if args.analysecpufreq and args.analysepower:
-        category = 'CPUFreqPower'
-        title[category] = 'CPU frequency node power use'
-        outputs.append(category)
-        category_list[category] = cpufreq_set
-        category_col[category] = 'CPUFreq'
-        analysis_col[category] = 'NodePower'
-        analyse_none[category] = True
-        full_node[category] = True
-        fullmatch[category] = True
+    for cat_id in outputs:
+        config = all_categories[cat_id]
+        title[cat_id] = config['title']
+        category_col[cat_id] = config['category_column']
+        
+        # Handle dynamic analysis column based on GPU mode
+        if 'analysis_column' in config:
+            analysis_col[cat_id] = config['analysis_column']
+        elif args.usegpu and 'analysis_column_gpu' in config:
+            analysis_col[cat_id] = config['analysis_column_gpu']
+        elif not args.usegpu and 'analysis_column_core' in config:
+            analysis_col[cat_id] = config['analysis_column_core']
+        
+        analyse_none[cat_id] = config.get('analyse_none', False)
+        full_node[cat_id] = config.get('full_node', False)
+        fullmatch[cat_id] = config.get('fullmatch', True)
+        
+        # Set category_list based on the category type
+        if config['category_column'] == 'Software':
+            category_list[cat_id] = codelist
+        elif config['category_column'] == 'Area':
+            category_list[cat_id] = areaset
+        elif config['category_column'] == 'ProjectID':
+            category_list[cat_id] = projidlist
+        elif config['category_column'] == 'Motif':
+            category_list[cat_id] = motif_set
+        elif config['category_column'] == 'Language':
+            category_list[cat_id] = lang_set
+        elif config['category_column'] == 'CPUFreq':
+            category_list[cat_id] = cpufreq_set
     
     # Loop over the defined output categories computing distributions
     for output in outputs:

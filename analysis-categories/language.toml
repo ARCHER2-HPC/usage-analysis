@@ -1,0 +1,22 @@
+# Programming language distribution analysis categories
+
+[[analyses]]
+id = "LangSize"
+title = "Programming language job size"
+category_column = "Language"
+analysis_column_core = "Cores"
+analysis_column_gpu = "NGPUS"
+analyse_none = false
+full_node = false
+fullmatch = true
+required_flag = "analyselang"
+
+[[analyses]]
+id = "LangPower"
+title = "Programming language node power use"
+category_column = "Language"
+analysis_column = "NodePower"
+analyse_none = false
+full_node = true
+fullmatch = true
+required_flag = ["analyselang", "analysepower"]
